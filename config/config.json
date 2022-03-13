@@ -1,0 +1,23 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/config.2.0.schema.json",
+  "version": "2.0",
+  "bundles": {
+    "tasks-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/tasks/TasksWebPart.js",
+          "manifest": "./src/webparts/tasks/TasksWebPart.manifest.json"
+        }
+      ]
+    }
+  },
+  "externals": {
+    "luxon": {
+      "path": "https://cdn.jsdelivr.net/npm/luxon@2.3.1/build/global/luxon.min.js",
+      "globalName": "luxon"
+    }
+  },
+  "localizedResources": {
+    "TasksWebPartStrings": "lib/webparts/tasks/loc/{locale}.js"
+  }
+}
