@@ -1,0 +1,30 @@
+@import '~office-ui-fabric-react/dist/sass/References.scss';
+
+.task {
+    box-shadow: $ms-depth-shadow-4;
+    min-width: 200px;
+    max-width: 250px;
+    min-height: 60px;
+    padding: .5em;
+}
+
+.header {
+    display: flex;
+    flex-flow: row;
+    justify-content: space-between;
+}
+
+.subheader {
+    display: flex;
+    flex-flow: row;
+    justify-content: flex-start;
+    margin-top: .5em;
+
+    .hours {
+        margin-left: 1em;
+    }
+
+    .person {
+        align-self: end;
+    }
+}
