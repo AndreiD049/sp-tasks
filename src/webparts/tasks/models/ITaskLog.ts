@@ -1,20 +1,23 @@
-export type TaskStatus = "Open" | "Pending" | "Finished" | "Cancelled";
+export type TaskStatus = 'Open' | 'Pending' | 'Finished' | 'Cancelled'
 
 export default interface ITaskLog {
-    ID: number;
+    ID: number
     Task: {
-        ID: number;
-        Title: string;
-    };
-    TaskId?: number;
-    Date: Date;
-    DateTimeStarted: Date;
-    DateTimeFinished: Date;
-    Status: TaskStatus;
+        ID: number
+        Title: string
+        Description: string;
+        Time: string;
+    }
+    TaskId?: number
+    Date: string
+    DateTimeStarted: Date
+    DateTimeFinished: Date
+    Status: TaskStatus
     User: {
-        ID: number;
-        Title: string;
-    };
-    UserId?: number;
-    Remark: string;
+        ID: number
+        Title: string,
+        Email: string
+    }
+    UserId?: number
+    Remark: string
 }

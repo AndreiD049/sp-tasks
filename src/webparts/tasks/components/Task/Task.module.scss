@@ -2,29 +2,61 @@
 
 .task {
     box-shadow: $ms-depth-shadow-4;
-    min-width: 200px;
-    max-width: 250px;
+    max-width: 300px;
     min-height: 60px;
-    padding: .5em;
-}
+    padding: 1em;
+    border-left: 5px solid "[theme: themePrimary]";
+    background-color: "[theme: neutralLighter]";
 
-.header {
-    display: flex;
-    flex-flow: row;
-    justify-content: space-between;
-}
-
-.subheader {
-    display: flex;
-    flex-flow: row;
-    justify-content: flex-start;
-    margin-top: .5em;
-
-    .hours {
-        margin-left: 1em;
+    .header {
+        display: flex;
+        flex-flow: row nowrap;
+        justify-content: space-between;
     }
 
-    .person {
-        align-self: end;
+    .subheader {
+        display: flex;
+        flex-flow: row nowrap;
+        justify-content: flex-start;
+        margin-top: 0.3em;
+
+        .hours {
+            margin-left: 1em;
+        }
+
+        .person {
+            align-self: end;
+        }
+    }
+
+    .status {
+        display: flex;
+        flex-flow: row nowrap;
+        align-items: flex-end;
+        justify-content: flex-start;
+        gap: 1em;
+        margin-top: 0.3em;
+    }
+
+    .body {
+        display: flex;
+        flex-flow: column nowrap;
+        align-items: center;
+        justify-content: flex-start;
+
+        i {
+            font-size: 1em;
+        }
+
+        .separator {
+            align-self: stretch;
+            &::before {
+                background-color: "[theme: neutralLight, default: #eaeaea]";
+            }
+        }
+
+        .description {
+            align-self: flex-start;
+        }
     }
 }
