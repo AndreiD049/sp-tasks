@@ -28,6 +28,7 @@
         flex-flow: column;
         align-items: stretch;
         padding: 1em;
+        border-left-color: "[theme: themePrimary, default: #0078d7]";
         background-color: "[theme: neutralLighterAlt, default: #fbf4f4]";
 
         & > * + * {

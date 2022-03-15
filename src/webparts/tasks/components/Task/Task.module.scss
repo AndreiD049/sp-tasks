@@ -5,9 +5,10 @@
     width: 300px;
     min-height: 60px;
     padding: .5em 1em;
-    border-left: 5px solid;
-    border-color: "[theme: themePrimary, default: #a4262c]";
-    background-color: "[theme: neutralLighter, default: #e3afb2]";
+    background-color: $ms-color-neutralLight;
+    border-left-color: inherit;
+    border-left-width: 5px;
+    border-left-style: solid;
 
     .header {
         display: flex;
