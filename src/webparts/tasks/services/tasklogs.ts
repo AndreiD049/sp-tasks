@@ -6,6 +6,7 @@ import { ITasksWebPartProps } from '../TasksWebPart'
 import UserService from './users'
 import { DateTime } from 'luxon'
 import ITask from '../models/ITask'
+import { IItemAddResult } from '@pnp/sp/items'
 
 const LOG_SELECT = [
     'ID',
@@ -30,11 +31,13 @@ export default class TaskLogsService {
     rootSP: SPFI
     sp: SPFI
     list: IList
+    listName: string
 
     constructor(props: ITasksWebPartProps) {
         this.sp = getSP('Data')
         this.rootSP = getSP()
         this.list = this.sp.web.lists.getByTitle(props.taskLogsListTitle)
+        this.listName = props.taskLogsListTitle
         this.userService = new UserService()
     }
 
@@ -53,33 +56,21 @@ export default class TaskLogsService {
         date?: Date,
         user?: number | string
     ): Promise<ITaskLog[]> {
-        if (user !== undefined && typeof user === 'number') {
-            return this.list.items
-                .filter(
-                    `(Date eq '${DateTime.fromJSDate(date).toISODate()}') and
-                     (UserId eq ${user})`
-                )
-                .select(...LOG_SELECT)
-                .expand(...LOG_EXPAND)()
+        if (date === undefined) {
+            date = new Date()
         }
-        if (user !== undefined && typeof user === 'string') {
-            const userId = (await this.userService.getUser(user)).Id
-            return this.list.items
-                .filter(
-                    `(Date eq '${DateTime.fromJSDate(date).toISODate()}') and
-                     (UserId eq ${userId})`
-                )
-                .select(...LOG_SELECT)
-                .expand(...LOG_EXPAND)()
+        if (user === undefined) {
+            user = (await this.userService.getCurrentUser()).Id
         }
-        if (date !== undefined) {
-            return this.list.items
-                .filter(`Date eq '${DateTime.fromJSDate(date).toISODate()}'`)
-                .select(...LOG_SELECT)
-                .expand(...LOG_EXPAND)()
+        if (typeof user === 'string') {
+            user = (await this.userService.getUser(user)).Id
         }
+        const filter = `(Date eq '${DateTime.fromJSDate(
+            date
+        ).toISODate()}') and (UserId eq ${user})`
         return this.list.items
-            .filter(`UserId eq ${(await this.userService.getCurrentUser()).Id}`)
+            .filter(filter)
+            .orderBy('Task/Time', true)
             .select(...LOG_SELECT)
             .expand(...LOG_EXPAND)()
     }
@@ -90,33 +81,47 @@ export default class TaskLogsService {
      *  - User to which the task is assigned
      *  - Date of the task (default today)
      */
-    async createTaskLog(task: ITask)
-    async createTaskLog(task: ITask, user: number)
-    async createTaskLog(task: ITask, user: string)
-    async createTaskLog(task: ITask, user: number, date: Date)
-    async createTaskLog(task: ITask, user: string, date: Date)
-    async createTaskLog(task: ITask, user?: string | number, date?: Date) {
+    async createTaskLogs(tasks: ITask[], date?: Date) {
+        const [batchSP, execute] = this.sp.batched()
         if (date === undefined) {
             date = new Date()
         }
-        if (user === undefined) {
-            user = (await this.userService.getCurrentUser()).Id
-        }
-        let userId = -1
-        if (typeof user === 'string') {
-            const foundUser = await this.userService.getUser(user)
-            if (!foundUser) throw Error(`User ${user} was not found`)
-            userId = foundUser.Id
-        } else {
-            userId = user
-        }
-        const taskLog: Partial<ITaskLog> = {
-            Date: date.toISOString(),
+
+        let res: IItemAddResult[] = []
+
+        tasks.forEach((task) => {
+            batchSP.web.lists
+                .getByTitle(this.listName)
+                .items.add(this.createLogFromTask(task, date))
+                .then((r) => res.push(r))
+        })
+        await execute()
+        return res
+    }
+
+    async updateTaskLog(id: number, update: Partial<ITaskLog>) {
+        return (await this.list.items.getById(id).update(update)).item
+            .select(...LOG_SELECT)
+            .expand(...LOG_EXPAND)()
+    }
+
+    async getTaskLogsFromAddResult(
+        results: IItemAddResult[]
+    ): Promise<ITaskLog[]> {
+        return Promise.all(
+            results.map(
+                async (res) =>
+                    await res.item.select(...LOG_SELECT).expand(...LOG_EXPAND)()
+            )
+        )
+    }
+
+    private createLogFromTask(task: ITask, date: Date): Partial<ITaskLog> {
+        return {
+            Date: DateTime.fromJSDate(date).toISODate(),
             Status: 'Open',
-            DateTimeStarted: DateTime.utc().toJSDate(),
             TaskId: task.ID,
-            UserId: userId,
+            UserId: task.AssignedTo.ID,
         }
-        return this.list.items.add(taskLog)
     }
 }

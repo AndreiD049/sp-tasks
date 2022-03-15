@@ -17,6 +17,7 @@ import TaskService from './services/tasks'
 import GlobalContext from './utils/GlobalContext'
 import TaskLogsService from './services/tasklogs'
 import { spfi, SPFx } from '@pnp/sp'
+import UserService from './services/users'
 
 export interface ITasksWebPartProps {
     dataSourceRoot: string
@@ -25,13 +26,16 @@ export interface ITasksWebPartProps {
 }
 
 export default class TasksWebPart extends BaseClientSideWebPart<ITasksWebPartProps> {
-    public render(): void {
+    public async render(): Promise<void> {
+        let userServeice = new UserService();
         const element: React.ReactElement = React.createElement(
             GlobalContext.Provider,
             {
                 value: {
                     TaskService: new TaskService(this.properties),
                     TaskLogsService: new TaskLogsService(this.properties),
+                    UserService: userServeice,
+                    currentUser: await userServeice.getCurrentUser(),
                 },
             },
             React.createElement(Tasks)

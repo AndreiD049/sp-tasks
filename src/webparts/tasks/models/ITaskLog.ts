@@ -16,7 +16,7 @@ export default interface ITaskLog {
     User: {
         ID: number
         Title: string,
-        Email: string
+        EMail: string
     }
     UserId?: number
     Remark: string

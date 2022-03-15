@@ -12,7 +12,7 @@ export default interface ITask {
     AssignedTo: {
         ID: number
         Title: string,
-        Email: string,
+        EMail: string,
     }
     Time: string
     Type: TaskType

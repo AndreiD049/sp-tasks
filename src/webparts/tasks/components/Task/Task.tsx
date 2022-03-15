@@ -2,6 +2,7 @@ import { DateTime } from 'luxon'
 import {
     Dropdown,
     IconButton,
+    IDropdownOption,
     Persona,
     PersonaSize,
     Separator,
@@ -11,6 +12,7 @@ import * as React from 'react'
 import { FC } from 'react'
 import ITask from '../../models/ITask'
 import ITaskLog, { TaskStatus } from '../../models/ITaskLog'
+import GlobalContext from '../../utils/GlobalContext'
 import styles from './Task.module.scss'
 
 const CLOSED_ICON = 'ChevronDown'
@@ -61,9 +63,11 @@ const DROPDOWN_KEYS: { key: TaskStatus; text: string }[] = [
 
 export interface ITaskProps {
     task: ITaskLog | ITask
+    handleTaskUpdated: (task: ITaskLog) => void
 }
 
 const Task: FC<ITaskProps> = (props) => {
+    const { TaskLogsService } = React.useContext(GlobalContext)
     const [open, setOpen] = React.useState<boolean>(false)
 
     let description = ''
@@ -72,35 +76,43 @@ const Task: FC<ITaskProps> = (props) => {
     let email = ''
     let date = React.useMemo(() => {
         if ('Description' in props.task) {
-            return DateTime.fromJSDate(new Date()).toLocaleString(DateTime.DATE_SHORT);
+            return DateTime.fromJSDate(new Date()).toLocaleString(
+                DateTime.DATE_SHORT
+            )
         } else {
-            return DateTime.fromISO(props.task.Date).toLocaleString(DateTime.DATE_SHORT);
+            return DateTime.fromISO(props.task.Date).toLocaleString(
+                DateTime.DATE_SHORT
+            )
         }
-    }, [props.task]);
+    }, [props.task])
     let time = React.useMemo(() => {
         if ('Description' in props.task) {
-            return DateTime.fromISO(props.task.Time).toLocaleString(DateTime.TIME_24_SIMPLE);
+            return DateTime.fromISO(props.task.Time).toLocaleString(
+                DateTime.TIME_24_SIMPLE
+            )
         } else {
-            return DateTime.fromISO(props.task.Task.Time).toLocaleString(DateTime.TIME_24_SIMPLE);
+            return DateTime.fromISO(props.task.Task.Time).toLocaleString(
+                DateTime.TIME_24_SIMPLE
+            )
         }
-    }, [props.task]);
+    }, [props.task])
     let status: TaskStatus = React.useMemo(() => {
         if ('Description' in props.task) {
-            return 'Open';
+            return 'Open'
         } else {
-            return props.task.Status;
+            return props.task.Status
         }
-    }, [props.task]);
+    }, [props.task])
     if ('Description' in props.task) {
         description = props.task.Description
         title = props.task.Title
         username = props.task.AssignedTo.Title
-        email = props.task.AssignedTo.Email
+        email = props.task.AssignedTo.EMail
     } else {
         description = props.task.Task.Description
         title = props.task.Task.Title
         username = props.task.User.Title
-        email = props.task.User.Email
+        email = props.task.User.EMail
     }
 
     const body = React.useMemo(() => {
@@ -117,6 +129,22 @@ const Task: FC<ITaskProps> = (props) => {
         setOpen((prev) => !prev)
     }, [])
 
+    const handleChange = async (_: any, option: IDropdownOption) => {
+        const log: ITaskLog = 'Date' in props.task ? props.task : null; // TODO: create a tasklog from task
+        const update: Partial<ITaskLog> = {
+            Status: option.key as TaskStatus,
+        }
+        switch (update.Status) {
+            case 'Pending':
+                update.DateTimeStarted = log.DateTimeStarted ?? new Date();
+                break;
+            case 'Finished':
+                update.DateTimeFinished = log.DateTimeFinished ?? new Date();
+        }
+        const updated = await TaskLogsService.updateTaskLog(log.ID, update)
+        props.handleTaskUpdated(updated);
+    }
+
     return (
         <div className={styles.task}>
             <div className={styles.header}>
@@ -131,7 +159,9 @@ const Task: FC<ITaskProps> = (props) => {
             </div>
             <div className={styles.subheader}>
                 <Text variant="medium">{date}</Text>
-                <Text variant="medium" className={styles.hours}>{time}</Text>
+                <Text variant="medium" className={styles.hours}>
+                    {time}
+                </Text>
             </div>
             <div className={styles.status}>
                 <Text variant="medium">Status:</Text>
@@ -139,6 +169,7 @@ const Task: FC<ITaskProps> = (props) => {
                     options={DROPDOWN_KEYS}
                     styles={DROPDOWN_STYLES}
                     selectedKey={status}
+                    onChange={handleChange}
                 />
             </div>
             {description ? (

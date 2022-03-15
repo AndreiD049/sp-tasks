@@ -1,6 +1,6 @@
 import { Caching } from '@pnp/queryable'
 import { SPFI } from '@pnp/sp'
-import { ISiteUserInfo } from '@pnp/sp/site-users/types'
+import { ISiteUser, ISiteUserInfo } from '@pnp/sp/site-users/types'
 import { getSP } from '../../../pnpjs-presets'
 
 export default class UserService {
@@ -18,7 +18,7 @@ export default class UserService {
         return (await this.getSiteUsers()).find((u) => u.Title === title)
     }
 
-    async getCurrentUser() {
+    async getCurrentUser(): Promise<ISiteUserInfo> {
         return this.sp.web.currentUser();
     }
 }

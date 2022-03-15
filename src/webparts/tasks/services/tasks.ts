@@ -37,6 +37,7 @@ class TaskService {
     async getTasksByUserId(userId: number) {
         return this.list.items
             .filter(`AssignedToId eq ${userId}`)
+            .orderBy('Time', true)
             .select(...TASK_SELECT)
             .expand(...TASK_EXPAND)()
     }
