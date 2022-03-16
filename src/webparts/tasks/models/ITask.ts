@@ -6,14 +6,14 @@ export enum TaskType {
 }
 
 export default interface ITask {
-    ID: number
-    Title: string
-    Description: string
+    ID: number;
+    Title: string;
+    Description: string;
     AssignedTo: {
-        ID: number
-        Title: string,
-        EMail: string,
-    }
-    Time: string
-    Type: TaskType
+        ID: number;
+        Title: string;
+        EMail: string;
+    };
+    Time: string;
+    Type: TaskType;
 }

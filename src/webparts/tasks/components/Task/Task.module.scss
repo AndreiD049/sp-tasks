@@ -4,7 +4,7 @@
     box-shadow: $ms-depth-shadow-4;
     width: 300px;
     min-height: 60px;
-    padding: .5em 1em;
+    padding: 0.5em 1em;
     background-color: $ms-color-neutralLight;
     border-left-color: inherit;
     border-left-width: 5px;
@@ -53,7 +53,7 @@
         .separator {
             align-self: stretch;
             &::before {
-                background-color: "[theme: neutralLight, default: #eaeaea]";
+                background-color: '[theme: neutralLight, default: #eaeaea]';
             }
         }
 

@@ -1,4 +1,4 @@
-import { DateTime } from 'luxon'
+import { DateTime } from 'luxon';
 import {
     Dropdown,
     IconButton,
@@ -7,16 +7,16 @@ import {
     PersonaSize,
     Separator,
     Text,
-} from 'office-ui-fabric-react'
-import * as React from 'react'
-import { FC } from 'react'
-import ITask from '../../models/ITask'
-import ITaskLog, { TaskStatus } from '../../models/ITaskLog'
-import GlobalContext from '../../utils/GlobalContext'
-import styles from './Task.module.scss'
+} from 'office-ui-fabric-react';
+import * as React from 'react';
+import { FC } from 'react';
+import ITask from '../../models/ITask';
+import ITaskLog, { TaskStatus } from '../../models/ITaskLog';
+import GlobalContext from '../../utils/GlobalContext';
+import styles from './Task.module.scss';
 
-const CLOSED_ICON = 'ChevronDown'
-const OPEN_ICON = 'ChevronUp'
+const CLOSED_ICON = 'ChevronDown';
+const OPEN_ICON = 'ChevronUp';
 const DROPDOWN_STYLES = {
     caretDownWrapper: {
         display: 'none',
@@ -41,7 +41,7 @@ const DROPDOWN_STYLES = {
     dropdownOptionText: {
         fontSize: '.8em',
     },
-}
+};
 const DROPDOWN_KEYS: { key: TaskStatus; text: string }[] = [
     {
         key: 'Open',
@@ -59,81 +59,81 @@ const DROPDOWN_KEYS: { key: TaskStatus; text: string }[] = [
         key: 'Cancelled',
         text: 'Cancelled',
     },
-]
+];
 
 export interface ITaskProps {
-    task: ITaskLog | ITask
-    handleTaskUpdated: (task: ITaskLog) => void
+    task: ITaskLog | ITask;
+    handleTaskUpdated: (task: ITaskLog) => void;
 }
 
 const Task: FC<ITaskProps> = (props) => {
-    const { TaskLogsService } = React.useContext(GlobalContext)
-    const [open, setOpen] = React.useState<boolean>(false)
+    const { TaskLogsService } = React.useContext(GlobalContext);
+    const [open, setOpen] = React.useState<boolean>(false);
 
-    let description = ''
-    let title = ''
-    let username = ''
-    let email = ''
+    let description = '';
+    let title = '';
+    let username = '';
+    let email = '';
     let date = React.useMemo(() => {
         if ('Description' in props.task) {
             return DateTime.fromJSDate(new Date()).toLocaleString(
                 DateTime.DATE_SHORT
-            )
+            );
         } else {
             return DateTime.fromISO(props.task.Date).toLocaleString(
                 DateTime.DATE_SHORT
-            )
+            );
         }
-    }, [props.task])
+    }, [props.task]);
     let time = React.useMemo(() => {
         if ('Description' in props.task) {
             return DateTime.fromISO(props.task.Time).toLocaleString(
                 DateTime.TIME_24_SIMPLE
-            )
+            );
         } else {
             return DateTime.fromISO(props.task.Task.Time).toLocaleString(
                 DateTime.TIME_24_SIMPLE
-            )
+            );
         }
-    }, [props.task])
+    }, [props.task]);
     let status: TaskStatus = React.useMemo(() => {
         if ('Description' in props.task) {
-            return 'Open'
+            return 'Open';
         } else {
-            return props.task.Status
+            return props.task.Status;
         }
-    }, [props.task])
+    }, [props.task]);
     if ('Description' in props.task) {
-        description = props.task.Description
-        title = props.task.Title
-        username = props.task.AssignedTo.Title
-        email = props.task.AssignedTo.EMail
+        description = props.task.Description;
+        title = props.task.Title;
+        username = props.task.AssignedTo.Title;
+        email = props.task.AssignedTo.EMail;
     } else {
-        description = props.task.Task.Description
-        title = props.task.Task.Title
-        username = props.task.User.Title
-        email = props.task.User.EMail
+        description = props.task.Task.Description;
+        title = props.task.Task.Title;
+        username = props.task.User.Title;
+        email = props.task.User.EMail;
     }
 
     const body = React.useMemo(() => {
-        if (!open) return null
+        if (!open) return null;
         return (
             <>
                 <Separator className={styles.separator} />
                 <div className={styles.description}>{description}</div>
             </>
-        )
-    }, [open])
+        );
+    }, [open]);
 
     const toggleOpen = React.useCallback(() => {
-        setOpen((prev) => !prev)
-    }, [])
+        setOpen((prev) => !prev);
+    }, []);
 
     const handleChange = async (_: any, option: IDropdownOption) => {
         const log: ITaskLog = 'Date' in props.task ? props.task : null; // TODO: create a tasklog from task
         const update: Partial<ITaskLog> = {
             Status: option.key as TaskStatus,
-        }
+        };
         switch (update.Status) {
             case 'Pending':
                 update.DateTimeStarted = log.DateTimeStarted ?? new Date();
@@ -141,9 +141,9 @@ const Task: FC<ITaskProps> = (props) => {
             case 'Finished':
                 update.DateTimeFinished = log.DateTimeFinished ?? new Date();
         }
-        const updated = await TaskLogsService.updateTaskLog(log.ID, update)
+        const updated = await TaskLogsService.updateTaskLog(log.ID, update);
         props.handleTaskUpdated(updated);
-    }
+    };
 
     return (
         <div className={styles.task}>
@@ -182,7 +182,7 @@ const Task: FC<ITaskProps> = (props) => {
                 </div>
             ) : null}
         </div>
-    )
-}
+    );
+};
 
-export default Task
+export default Task;

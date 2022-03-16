@@ -11,12 +11,15 @@
 
     .selector {
         padding: 1em 0;
+    }
+    
+    .userSelector {
         margin-bottom: 2em;
     }
 
     .container {
         display: flex;
-        flex-flow: row wrap;
+        flex-flow: row nowrap;
         gap: 1em;
         justify-content: space-evenly;
         align-items: flex-start;
@@ -24,15 +27,16 @@
     }
 
     .taskContainer {
+        color: $ms-color-neutralPrimary;
         display: flex;
         flex-flow: column;
         align-items: stretch;
         padding: 1em;
-        border-left-color: "[theme: themePrimary, default: #0078d7]";
-        background-color: "[theme: neutralLighterAlt, default: #fbf4f4]";
+        border-left-color: '[theme: themePrimary, default: #0078d7]';
+        background-color: '[theme: neutralLighterAlt, default: #fbf4f4]';
 
         & > * + * {
-            margin-top: .7em;
+            margin-top: 0.7em;
         }
     }
 }

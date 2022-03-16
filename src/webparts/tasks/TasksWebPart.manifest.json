@@ -28,7 +28,11 @@
             "description": { "default": "Recurrent tasks" },
             "officeFabricIconFontName": "Page",
             "properties": {
-                "description": "Tasks"
+                "tasksListTitle": "Tasks",
+                "taskLogsListTitle": "Task Logs",
+                "userColumn": "User",
+                "teamColumn": "Team",
+                "roleColumn": "Role"
             }
         }
     ]

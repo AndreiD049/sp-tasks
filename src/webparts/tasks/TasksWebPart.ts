@@ -1,33 +1,44 @@
-import * as React from 'react'
-import * as ReactDom from 'react-dom'
-import { Version } from '@microsoft/sp-core-library'
+import * as React from 'react';
+import * as ReactDom from 'react-dom';
+import { Version } from '@microsoft/sp-core-library';
 import {
     IPropertyPaneConfiguration,
     PropertyPaneTextField,
     PropertyPaneButton,
     PropertyPaneButtonType,
-} from '@microsoft/sp-property-pane'
-import { BaseClientSideWebPart } from '@microsoft/sp-webpart-base'
+} from '@microsoft/sp-property-pane';
+import { BaseClientSideWebPart } from '@microsoft/sp-webpart-base';
 
-import * as strings from 'TasksWebPartStrings'
-import Tasks from './components/Tasks'
-import { setupSP } from '../../pnpjs-presets'
-import { setupLists } from './utils/setup-lists'
-import TaskService from './services/tasks'
-import GlobalContext from './utils/GlobalContext'
-import TaskLogsService from './services/tasklogs'
-import { spfi, SPFx } from '@pnp/sp'
-import UserService from './services/users'
+import * as strings from 'TasksWebPartStrings';
+import Tasks from './components/Tasks';
+import { setupSP } from '../../pnpjs-presets';
+import { setupLists } from './utils/setup-lists';
+import TaskService from './services/tasks';
+import GlobalContext from './utils/GlobalContext';
+import TaskLogsService from './services/tasklogs';
+import UserService from './services/users';
+import TeamService from './services/teams';
+import { USER_WEB_RE } from './utils/constants';
 
 export interface ITasksWebPartProps {
-    dataSourceRoot: string
-    tasksListTitle: string
-    taskLogsListTitle: string
+    dataSourceRoot: string;
+    tasksListTitle: string;
+    taskLogsListTitle: string;
+    staffListUrl: string;
+    userColumn: string;
+    teamColumn: string;
+    roleColumn: string;
 }
 
 export default class TasksWebPart extends BaseClientSideWebPart<ITasksWebPartProps> {
     public async render(): Promise<void> {
         let userServeice = new UserService();
+        const teamService = new TeamService(
+            this.properties.staffListUrl,
+            this.properties.userColumn,
+            this.properties.teamColumn,
+            this.properties.roleColumn
+        );
         const element: React.ReactElement = React.createElement(
             GlobalContext.Provider,
             {
@@ -35,31 +46,34 @@ export default class TasksWebPart extends BaseClientSideWebPart<ITasksWebPartPro
                     TaskService: new TaskService(this.properties),
                     TaskLogsService: new TaskLogsService(this.properties),
                     UserService: userServeice,
-                    currentUser: await userServeice.getCurrentUser(),
+                    TeamService: teamService,
+                    currentUser: await teamService.getCurrentUser(),
+                    teamMembers: await teamService.getCurrentUserTeamMembers(),
                 },
             },
             React.createElement(Tasks)
-        )
+        );
 
-        ReactDom.render(element, this.domElement)
+        ReactDom.render(element, this.domElement);
     }
 
     protected async onInit(): Promise<void> {
-        super.onInit()
+        super.onInit();
 
-        let sp = spfi().using(SPFx(this.context))
+        const userWebUrl = this.properties.staffListUrl?.match(USER_WEB_RE)[1];
 
         setupSP(this.context, {
             Data: this.properties.dataSourceRoot,
-        })
+            Users: userWebUrl,
+        });
     }
 
     protected onDispose(): void {
-        ReactDom.unmountComponentAtNode(this.domElement)
+        ReactDom.unmountComponentAtNode(this.domElement);
     }
 
     protected get dataVersion(): Version {
-        return Version.parse('1.0')
+        return Version.parse('1.0');
     }
 
     protected getPropertyPaneConfiguration(): IPropertyPaneConfiguration {
@@ -87,9 +101,26 @@ export default class TasksWebPart extends BaseClientSideWebPart<ITasksWebPartPro
                                 }),
                             ],
                         },
+                        {
+                            groupName: strings.StaffGroupName,
+                            groupFields: [
+                                PropertyPaneTextField('staffListUrl', {
+                                    label: strings.StaffListLabel,
+                                }),
+                                PropertyPaneTextField('userColumn', {
+                                    label: strings.UserColumnNameLabel,
+                                }),
+                                PropertyPaneTextField('teamColumn', {
+                                    label: strings.TeamColumnNameLabel,
+                                }),
+                                PropertyPaneTextField('roleColumn', {
+                                    label: strings.RoleColumnNameLabel,
+                                }),
+                            ],
+                        },
                     ],
                 },
             ],
-        }
+        };
     }
 }
