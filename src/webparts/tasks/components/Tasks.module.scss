@@ -23,9 +23,8 @@
         gap: 1em;
         justify-content: space-evenly;
         align-items: flex-start;
-        align-self: stretch;
     }
-
+    
     .taskContainer {
         color: $ms-color-neutralPrimary;
         display: flex;
@@ -34,6 +33,7 @@
         padding: 1em;
         border-left-color: '[theme: themePrimary, default: #0078d7]';
         background-color: '[theme: neutralLighterAlt, default: #fbf4f4]';
+        align-self: stretch;
 
         & > * + * {
             margin-top: 0.7em;
