@@ -11,6 +11,7 @@ import { Persona, Spinner, SpinnerSize, Text } from 'office-ui-fabric-react';
 import UserSelctor from './UserSelector';
 import createState from 'use-persisted-state';
 import { IUser } from '../models/IUser';
+import { MINUTE } from '../utils/constants';
 
 const useLocalStorage = createState('selectedUsers');
 const useSessionStorage = createState('selectedDate', sessionStorage);
@@ -42,6 +43,20 @@ const Tasks: React.FC = () => {
         () => [currentUser.User.ID, ...selectedUsers.map((u) => u.User.ID)],
         [selectedUsers]
     );
+    const [forceUpdate, setForceUpdate] = React.useState(false);
+
+    /**
+     * Check for changes
+     */
+    React.useEffect(() => {
+        const timer = setInterval(async () => {
+            const logsChanged = await TaskLogsService.didTaskLogsChanged(date, userIds);
+            const tasksChanged = await TaskService.didTasksChanged(userIds);
+            console.log(logsChanged, tasksChanged);
+            if (logsChanged || tasksChanged) setForceUpdate(prev => !prev);
+        }, MINUTE * 2);
+        return () => clearInterval(timer);
+    }, []);
 
     const checkTasksAndCreateTaskLogs = async (
         tasks: ITask[],
@@ -86,9 +101,8 @@ const Tasks: React.FC = () => {
             }
             setLoading(false);
         }
-        setLoading(true);
         run();
-    }, [date, userIds]);
+    }, [date, userIds, forceUpdate]);
 
     const tasksPerUser = React.useMemo(() => {
         const result: ITasksPerUser = {};
@@ -112,8 +126,6 @@ const Tasks: React.FC = () => {
         setTasks((prev) => prev.filter((p) => p.ID !== t.ID));
         setTaskLogs((prev) => prev.map((p) => (p.ID === t.ID ? t : p)));
     };
-
-    console.log(tasksPerUser);
 
     const body = loading ? (
         <Spinner size={SpinnerSize.large} />
@@ -157,7 +169,10 @@ const Tasks: React.FC = () => {
             <div className={styles.commandbar}>
                 <DateSelector
                     date={date}
-                    setDate={setDate}
+                    setDate={(val) => { 
+                        setLoading(true); 
+                        setDate(val);
+                    }}
                     className={styles.selector}
                 />
                 <UserSelctor

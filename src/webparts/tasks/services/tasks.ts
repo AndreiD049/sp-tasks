@@ -2,8 +2,11 @@ import { SPFI } from '@pnp/sp';
 import { IItems } from '@pnp/sp/items';
 import { IList } from '@pnp/sp/lists';
 import { getSP } from '../../../pnpjs-presets';
+import IChanges from '../models/IChanges';
 import ITask from '../models/ITask';
 import { ITasksWebPartProps } from '../TasksWebPart';
+import { CHANGE_ROW_RE, CHANGE_TOKEN_RE } from '../utils/constants';
+import { processChangeResult } from '../utils/utils';
 import UserService from './users';
 
 const TASK_SELECT = [
@@ -25,6 +28,8 @@ class TaskService {
     sp: SPFI;
     list: IList;
     listTitle: string;
+    lastToken: string;
+
 
     constructor(public props: ITasksWebPartProps) {
         this.sp = getSP('Data');
@@ -32,6 +37,7 @@ class TaskService {
         this.list = this.sp.web.lists.getByTitle(props.tasksListTitle);
         this.listTitle = props.tasksListTitle;
         this.userService = new UserService();
+        this.lastToken = null;
     }
 
     async getTasks() {
@@ -41,6 +47,29 @@ class TaskService {
     async getTasksByUserId(userId: number) {
         return this._wrap(this.list.items
             .filter(`AssignedToId eq ${userId}`))();
+    }
+
+    /**
+     * This is a rather strange method, but as long as it works
+     * CAML queries should be used here
+     * See: https://docs.microsoft.com/en-us/sharepoint/dev/schema/introduction-to-collaborative-application-markup-language-caml
+     */
+    async didTasksChanged(userIds: number[]): Promise<boolean> {
+        const values = userIds.map(id => `<Value Type='User'>${id}</Value>`).join();
+        const result = await this.list.getListItemChangesSinceToken({
+            RowLimit: '1',
+            Query: 
+            `<Where>
+                <In>
+                    <FieldRef Name='AssignedTo' LookupId='TRUE'/>
+                    <Values>
+                        ${values}
+                    </Values>
+                </In>
+            </Where>`,
+            ChangeToken: this.lastToken,
+        });
+        return processChangeResult(result, this);
     }
 
     async getTasksByMultipleUserIds(userIds: number[]) {

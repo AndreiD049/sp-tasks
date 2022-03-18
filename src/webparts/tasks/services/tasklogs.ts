@@ -7,6 +7,8 @@ import UserService from './users';
 import { DateTime } from 'luxon';
 import ITask from '../models/ITask';
 import { IItemAddResult, IItems } from '@pnp/sp/items';
+import { CHANGE_ROW_RE, CHANGE_TOKEN_RE } from '../utils/constants';
+import { processChangeResult } from '../utils/utils';
 
 const LOG_SELECT = [
     'ID',
@@ -32,6 +34,7 @@ export default class TaskLogsService {
     sp: SPFI;
     list: IList;
     listName: string;
+    lastToken: string;
 
     constructor(props: ITasksWebPartProps) {
         this.sp = getSP('Data');
@@ -39,6 +42,7 @@ export default class TaskLogsService {
         this.list = this.sp.web.lists.getByTitle(props.taskLogsListTitle);
         this.listName = props.taskLogsListTitle;
         this.userService = new UserService();
+        this.lastToken = null;
     }
 
     /**
@@ -77,12 +81,43 @@ export default class TaskLogsService {
         const dt = DateTime.fromJSDate(date).toISODate();
         const list = batchedSP.web.lists.getByTitle(this.listName);
         ids.forEach((id) => {
-            this._wrap(list.items.filter(`(Date eq '${dt}') and (UserId eq ${id})`))()
-            .then(r => res = res.concat(r));
+            this._wrap(
+                list.items.filter(`(Date eq '${dt}') and (UserId eq ${id})`)
+            )().then((r) => (res = res.concat(r)));
         });
 
         await execute();
         return res;
+    }
+
+    /**
+     * Returns whether there are any changes in task logs
+     * This is a rather strange method, but as long as it works
+     * CAML queries should be used here
+     * See: https://docs.microsoft.com/en-us/sharepoint/dev/schema/introduction-to-collaborative-application-markup-language-caml
+     */
+    async didTaskLogsChanged(date: Date, userIds: number[]): Promise<boolean> {
+        const dt = DateTime.fromJSDate(date).toISODate();
+        const values = userIds.map(id => `<Value Type='User'>${id}</Value>)`);
+        const result = await this.list.getListItemChangesSinceToken({
+                RowLimit: '1',
+                Query: `<Where>
+                    <And>
+                        <In>
+                            <FieldRef Name='User' LookupId='TRUE'/>
+                            <Values>
+                                ${values}
+                            </Values>
+                        </In>
+                        <Eq>
+                            <FieldRef Name='Date'/>
+                            <Value Type='Date'>${dt}</Value>
+                        </Eq>
+                    </And>
+                </Where>`,
+                ChangeToken: this.lastToken,
+            });
+        return processChangeResult(result, this);
     }
 
     /**
