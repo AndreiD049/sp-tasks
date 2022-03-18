@@ -1,11 +1,10 @@
+import { Caching } from '@pnp/queryable';
 import { SPFI } from '@pnp/sp';
 import { IItems } from '@pnp/sp/items';
 import { IList } from '@pnp/sp/lists';
-import { getSP } from '../../../pnpjs-presets';
-import IChanges from '../models/IChanges';
+import { getNewSP } from '../../../pnp-preset/pnpjs-presets';
 import ITask from '../models/ITask';
 import { ITasksWebPartProps } from '../TasksWebPart';
-import { CHANGE_ROW_RE, CHANGE_TOKEN_RE } from '../utils/constants';
 import { processChangeResult } from '../utils/utils';
 import UserService from './users';
 
@@ -24,7 +23,6 @@ const TASK_EXPAND = ['AssignedTo'];
 
 class TaskService {
     userService: UserService;
-    rootSP: SPFI;
     sp: SPFI;
     list: IList;
     listTitle: string;
@@ -32,8 +30,7 @@ class TaskService {
 
 
     constructor(public props: ITasksWebPartProps) {
-        this.sp = getSP('Data');
-        this.rootSP = getSP();
+        this.sp = getNewSP('Data').using(Caching());
         this.list = this.sp.web.lists.getByTitle(props.tasksListTitle);
         this.listTitle = props.tasksListTitle;
         this.userService = new UserService();

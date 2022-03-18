@@ -7,7 +7,7 @@ import ITaskLog from '../models/ITaskLog';
 import ITask from '../models/ITask';
 import { DateTime } from 'luxon';
 import DateSelector from './DateSelector';
-import { Persona, Spinner, SpinnerSize, Text } from 'office-ui-fabric-react';
+import { Persona, Spinner, SpinnerSize } from 'office-ui-fabric-react';
 import UserSelctor from './UserSelector';
 import createState from 'use-persisted-state';
 import { IUser } from '../models/IUser';
@@ -52,7 +52,6 @@ const Tasks: React.FC = () => {
         const timer = setInterval(async () => {
             const logsChanged = await TaskLogsService.didTaskLogsChanged(date, userIds);
             const tasksChanged = await TaskService.didTasksChanged(userIds);
-            console.log(logsChanged, tasksChanged);
             if (logsChanged || tasksChanged) setForceUpdate(prev => !prev);
         }, MINUTE * 2);
         return () => clearInterval(timer);
@@ -85,13 +84,9 @@ const Tasks: React.FC = () => {
             const tasks = await TaskService.getTasksByMultipleUserIds(userIds);
             setTasks(tasks);
             if (isSameDay) {
-                const logs = await TaskLogsService.getTaskLogsByUserIds(
-                    date,
-                    userIds
-                );
-                setTaskLogs(
-                    logs.concat(await checkTasksAndCreateTaskLogs(tasks, logs))
-                );
+                const logs = await TaskLogsService.getTaskLogsByUserIds(date, userIds);
+                const newTasks = await checkTasksAndCreateTaskLogs(tasks, logs);
+                setTaskLogs(logs.concat(newTasks));
             } else {
                 const logs = await TaskLogsService.getTaskLogsByUserIds(
                     date,

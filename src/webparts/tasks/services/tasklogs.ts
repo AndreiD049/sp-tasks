@@ -1,14 +1,13 @@
 import { SPFI } from '@pnp/sp';
 import { IList } from '@pnp/sp/lists';
-import { getSP } from '../../../pnpjs-presets';
 import ITaskLog from '../models/ITaskLog';
 import { ITasksWebPartProps } from '../TasksWebPart';
 import UserService from './users';
 import { DateTime } from 'luxon';
 import ITask from '../models/ITask';
 import { IItemAddResult, IItems } from '@pnp/sp/items';
-import { CHANGE_ROW_RE, CHANGE_TOKEN_RE } from '../utils/constants';
 import { processChangeResult } from '../utils/utils';
+import { getSP } from '../../../pnp-preset/pnpjs-presets';
 
 const LOG_SELECT = [
     'ID',

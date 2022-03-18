@@ -28,7 +28,6 @@ const UserSelctor: React.FC<IUserSelectorProps> = (props) => {
     );
 
     const handleChange = (_ev: any, option: IComboBoxOption) => {
-        console.log(option, [...props.users, option.data]);
         if (option.selected) {
             props.setUsers([...props.users, option.data]);
         } else {
