@@ -3,7 +3,7 @@ import {
     DateTimeFieldFormatType,
     DateTimeFieldFriendlyFormatType,
 } from '@pnp/sp/fields';
-import { getSP } from '../../../pnp-preset/pnpjs-presets';
+import { getSP } from 'sp-preset';
 import { ITasksWebPartProps } from '../TasksWebPart';
 
 export const setupLists = async (properties: ITasksWebPartProps) => {

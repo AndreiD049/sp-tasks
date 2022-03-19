@@ -7,7 +7,7 @@ import { DateTime } from 'luxon';
 import ITask from '../models/ITask';
 import { IItemAddResult, IItems } from '@pnp/sp/items';
 import { processChangeResult } from '../utils/utils';
-import { getSP } from '../../../pnp-preset/pnpjs-presets';
+import { getSP } from 'sp-preset';
 
 const LOG_SELECT = [
     'ID',

@@ -2,7 +2,7 @@ import { Caching } from '@pnp/queryable';
 import { SPFI } from '@pnp/sp';
 import { IItems } from '@pnp/sp/items';
 import { IList } from '@pnp/sp/lists';
-import { getSP } from '../../../pnp-preset/pnpjs-presets';
+import { getSP } from 'sp-preset';
 import { IUser } from '../models/IUser';
 import { HOUR } from '../utils/constants';
 import UserService from './users';

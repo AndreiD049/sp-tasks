@@ -16,8 +16,11 @@ import GlobalContext from './utils/GlobalContext';
 import TaskLogsService from './services/tasklogs';
 import UserService from './services/users';
 import TeamService from './services/teams';
-import { USER_WEB_RE } from './utils/constants';
-import { setupSP } from '../../pnp-preset/pnpjs-presets';
+import { ACCESS_EDIT_OTHERS, USER_WEB_RE } from './utils/constants';
+import { setupSP } from 'sp-preset';
+import PropertyPaneAccessControl, { canCurrentUser, IUserGroupPermissions, setupAccessControl } from 'property-pane-access-control';
+import { InjectHeaders } from '@pnp/queryable';
+import { spfi, SPFx } from '@pnp/sp';
 
 export interface ITasksWebPartProps {
     dataSourceRoot: string;
@@ -27,6 +30,7 @@ export interface ITasksWebPartProps {
     userColumn: string;
     teamColumn: string;
     roleColumn: string;
+    permissions: IUserGroupPermissions;
 }
 
 export default class TasksWebPart extends BaseClientSideWebPart<ITasksWebPartProps> {
@@ -48,6 +52,7 @@ export default class TasksWebPart extends BaseClientSideWebPart<ITasksWebPartPro
                     TeamService: teamService,
                     currentUser: await teamService.getCurrentUser(),
                     teamMembers: await teamService.getCurrentUserTeamMembers(),
+                    canEditOthers: await canCurrentUser(ACCESS_EDIT_OTHERS, this.properties.permissions),
                 },
             },
             React.createElement(Tasks)
@@ -61,9 +66,23 @@ export default class TasksWebPart extends BaseClientSideWebPart<ITasksWebPartPro
 
         const userWebUrl = this.properties.staffListUrl?.match(USER_WEB_RE)[1];
 
-        setupSP(this.context, {
-            Data: this.properties.dataSourceRoot,
-            Users: userWebUrl,
+        setupAccessControl(this.context);
+
+        setupSP({
+            context: this.context,
+            tennants: {
+                Data: this.properties.dataSourceRoot,
+                Users: userWebUrl,
+            },
+            useRPM: true,
+            rpmTreshold: 800,
+            rpmTracing: true,
+            rpmAlerting: true,
+            additionalTimelinePipes: [
+                InjectHeaders({
+                    "Accept": "application/json;odata=nometadata"
+                }),
+            ],
         });
     }
 
@@ -117,6 +136,17 @@ export default class TasksWebPart extends BaseClientSideWebPart<ITasksWebPartPro
                                 }),
                             ],
                         },
+                        {
+                            groupName: 'Access',
+                            groupFields: [
+                                PropertyPaneAccessControl('permissions', {
+                                    key: 'access',
+                                    context: this.context,
+                                    permissions: [ACCESS_EDIT_OTHERS],
+                                    selectedUserGroups: this.properties.permissions
+                                })
+                            ]
+                        }
                     ],
                 },
             ],

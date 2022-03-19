@@ -13,6 +13,7 @@ export interface IGlobalContext {
     TeamService: TeamService;
     currentUser: IUser;
     teamMembers: IUser[];
+    canEditOthers: boolean;
 }
 
 const GlobalContext = React.createContext<IGlobalContext>({
@@ -22,6 +23,7 @@ const GlobalContext = React.createContext<IGlobalContext>({
     TeamService: null,
     currentUser: null,
     teamMembers: null,
+    canEditOthers: false,
 });
 
 export default GlobalContext;

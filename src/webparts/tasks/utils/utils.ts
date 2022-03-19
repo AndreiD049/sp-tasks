@@ -1,4 +1,4 @@
-import { CHANGE_ROW_RE, CHANGE_TOKEN_RE } from './constants';
+import { CHANGE_DELETE_RE, CHANGE_ROW_RE, CHANGE_TOKEN_RE } from './constants';
 
 export function processChangeResult(result: string, obj: { lastToken: string }) {
     const newToken = result.match(CHANGE_TOKEN_RE)[1];
@@ -6,5 +6,6 @@ export function processChangeResult(result: string, obj: { lastToken: string }) 
         obj.lastToken = newToken;
         return false;
     }
-    return CHANGE_ROW_RE.test(result);
+    obj.lastToken = newToken;
+    return CHANGE_ROW_RE.test(result) || CHANGE_DELETE_RE.test(result);
 }

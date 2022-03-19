@@ -12,6 +12,9 @@ const DateSelector: React.FC<IDateSelectorProps> = (props) => {
     const dateString = DateTime.fromJSDate(props.date).toLocaleString(
         DateTime.DATE_HUGE
     );
+    const dt = React.useMemo(() => DateTime.fromJSDate(props.date), [props.date]).toISODate();
+    const minDate = React.useMemo(() => DateTime.now().minus({ 'weeks': 1 }).toISODate(), []);
+    const maxDate = React.useMemo(() => DateTime.now().plus({ 'weeks': 1 }).toISODate(), []);
 
     const changeDate = React.useCallback(
         (amount: number) =>
@@ -28,6 +31,7 @@ const DateSelector: React.FC<IDateSelectorProps> = (props) => {
             <IconButton
                 iconProps={{ iconName: 'ChevronLeft' }}
                 onClick={changeDate.bind({}, -1)}
+                disabled={dt <= minDate}
             />
             <Text
                 style={{
@@ -42,6 +46,7 @@ const DateSelector: React.FC<IDateSelectorProps> = (props) => {
             <IconButton
                 iconProps={{ iconName: 'ChevronRight' }}
                 onClick={changeDate.bind({}, 1)}
+                disabled={dt >= maxDate}
             />
         </div>
     );

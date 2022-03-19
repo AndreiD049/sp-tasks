@@ -46,17 +46,14 @@ const Tasks: React.FC = () => {
     const [forceUpdate, setForceUpdate] = React.useState(false);
 
     /**
-     * Check for changes
+     * Matches the tasks with the task logs.
+     * If there are tasks without match, a task log is created from them.
+     * Then, the newly created tasks are retrieved from the list and returned to the client
+     * 
+     * @param tasks - the list of tasks assigned to current user
+     * @param logs - the list of concrete task logs currently created from assigned tasks 
+     * @returns newly created logs
      */
-    React.useEffect(() => {
-        const timer = setInterval(async () => {
-            const logsChanged = await TaskLogsService.didTaskLogsChanged(date, userIds);
-            const tasksChanged = await TaskService.didTasksChanged(userIds);
-            if (logsChanged || tasksChanged) setForceUpdate(prev => !prev);
-        }, MINUTE * 2);
-        return () => clearInterval(timer);
-    }, []);
-
     const checkTasksAndCreateTaskLogs = async (
         tasks: ITask[],
         logs: ITaskLog[]
@@ -77,14 +74,39 @@ const Tasks: React.FC = () => {
     };
 
     /**
-     * Get tasks for current date
+     * Check with the list every few minutes 
+     * if any changes occured to the tasks currently shown.
+     * If any tasks or logs changed, make a force update of info and retrieve everything again.
+     */
+    React.useEffect(() => {
+        TaskLogsService.didTaskLogsChanged(date, userIds);
+        TaskService.didTasksChanged(userIds);
+        const timer = setInterval(async () => {
+            const logsChanged = await TaskLogsService.didTaskLogsChanged(
+                date,
+                userIds
+            );
+            const tasksChanged = await TaskService.didTasksChanged(userIds);
+            if (logsChanged || tasksChanged) {
+                TaskService.clearCache();
+                setForceUpdate((prev) => !prev);
+            }
+        }, MINUTE * 2);
+        return () => clearInterval(timer);
+    }, []);
+
+    /**
+     * Retrieve information from the lists
      */
     React.useEffect(() => {
         async function run() {
             const tasks = await TaskService.getTasksByMultipleUserIds(userIds);
             setTasks(tasks);
             if (isSameDay) {
-                const logs = await TaskLogsService.getTaskLogsByUserIds(date, userIds);
+                const logs = await TaskLogsService.getTaskLogsByUserIds(
+                    date,
+                    userIds
+                );
                 const newTasks = await checkTasksAndCreateTaskLogs(tasks, logs);
                 setTaskLogs(logs.concat(newTasks));
             } else {
@@ -99,6 +121,9 @@ const Tasks: React.FC = () => {
         run();
     }, [date, userIds, forceUpdate]);
 
+    /**
+     * Data structures showing tasks and logs per user
+     */
     const tasksPerUser = React.useMemo(() => {
         const result: ITasksPerUser = {};
 
@@ -117,6 +142,10 @@ const Tasks: React.FC = () => {
         return result;
     }, [tasks, taskLogs]);
 
+    /**
+     * When a task is updated, it needs to be replaced within task logs and removed from tasks if present
+     * @param t - updated task
+     */
     const handleTaskUpdate = (t: ITaskLog) => {
         setTasks((prev) => prev.filter((p) => p.ID !== t.ID));
         setTaskLogs((prev) => prev.map((p) => (p.ID === t.ID ? t : p)));
@@ -164,8 +193,8 @@ const Tasks: React.FC = () => {
             <div className={styles.commandbar}>
                 <DateSelector
                     date={date}
-                    setDate={(val) => { 
-                        setLoading(true); 
+                    setDate={(val) => {
+                        setLoading(true);
                         setDate(val);
                     }}
                     className={styles.selector}

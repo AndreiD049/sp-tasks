@@ -1,3 +1,4 @@
+import { PropertyPaneDynamicFieldSet } from '@microsoft/sp-property-pane';
 import { DateTime } from 'luxon';
 import {
     Dropdown,
@@ -12,6 +13,7 @@ import * as React from 'react';
 import { FC } from 'react';
 import ITask from '../../models/ITask';
 import ITaskLog, { TaskStatus } from '../../models/ITaskLog';
+import { ITaskInfo } from '../../models/ITaskProperties';
 import GlobalContext from '../../utils/GlobalContext';
 import styles from './Task.module.scss';
 
@@ -67,60 +69,45 @@ export interface ITaskProps {
 }
 
 const Task: FC<ITaskProps> = (props) => {
-    const { TaskLogsService } = React.useContext(GlobalContext);
+    const { TaskLogsService, canEditOthers, currentUser } =
+        React.useContext(GlobalContext);
     const [open, setOpen] = React.useState<boolean>(false);
 
-    let description = '';
-    let title = '';
-    let username = '';
-    let email = '';
-    let date = React.useMemo(() => {
+    let info: ITaskInfo = React.useMemo(() => {
         if ('Description' in props.task) {
-            return DateTime.fromJSDate(new Date()).toLocaleString(
+            return {
+                description: props.task.Description,
+                title: props.task.Title,
+                user: props.task.AssignedTo,
+                date: DateTime.fromJSDate(new Date()).toLocaleString(
+                    DateTime.DATE_SHORT
+                ),
+                time: DateTime.fromISO(props.task.Time).toLocaleString(
+                    DateTime.TIME_24_SIMPLE
+                ),
+                status: 'Open',
+            };
+        }
+        return {
+            description: props.task.Task.Description,
+            title: props.task.Task.Title,
+            user: props.task.User,
+            date: DateTime.fromISO(props.task.Date).toLocaleString(
                 DateTime.DATE_SHORT
-            );
-        } else {
-            return DateTime.fromISO(props.task.Date).toLocaleString(
-                DateTime.DATE_SHORT
-            );
-        }
-    }, [props.task]);
-    let time = React.useMemo(() => {
-        if ('Description' in props.task) {
-            return DateTime.fromISO(props.task.Time).toLocaleString(
+            ),
+            time: DateTime.fromISO(props.task.Task.Time).toLocaleString(
                 DateTime.TIME_24_SIMPLE
-            );
-        } else {
-            return DateTime.fromISO(props.task.Task.Time).toLocaleString(
-                DateTime.TIME_24_SIMPLE
-            );
-        }
+            ),
+            status: props.task.Status,
+        };
     }, [props.task]);
-    let status: TaskStatus = React.useMemo(() => {
-        if ('Description' in props.task) {
-            return 'Open';
-        } else {
-            return props.task.Status;
-        }
-    }, [props.task]);
-    if ('Description' in props.task) {
-        description = props.task.Description;
-        title = props.task.Title;
-        username = props.task.AssignedTo.Title;
-        email = props.task.AssignedTo.EMail;
-    } else {
-        description = props.task.Task.Description;
-        title = props.task.Task.Title;
-        username = props.task.User.Title;
-        email = props.task.User.EMail;
-    }
 
     const body = React.useMemo(() => {
         if (!open) return null;
         return (
             <>
                 <Separator className={styles.separator} />
-                <div className={styles.description}>{description}</div>
+                <div className={styles.description}>{info.description}</div>
             </>
         );
     }, [open]);
@@ -146,21 +133,22 @@ const Task: FC<ITaskProps> = (props) => {
     };
 
     return (
-        <div className={styles.task}>
+        <div className={`${styles.task} ${info.status.toLowerCase()}`}>
             <div className={styles.header}>
-                <Text variant="mediumPlus">{title}</Text>
+                <Text variant="mediumPlus">{info.title}</Text>
                 <Persona
                     className={styles.person}
-                    text={username}
+                    text={info.user.Title}
                     size={PersonaSize.size24}
-                    title={email}
+                    title={info.user.EMail}
                     hidePersonaDetails
                 />
             </div>
             <div className={styles.subheader}>
-                <Text variant="medium">{date}</Text>
+                <Text variant="medium">{info.date}</Text>
                 <Text variant="medium" className={styles.hours}>
-                    {time}
+                    {' '}
+                    {info.time}{' '}
                 </Text>
             </div>
             <div className={styles.status}>
@@ -168,11 +156,20 @@ const Task: FC<ITaskProps> = (props) => {
                 <Dropdown
                     options={DROPDOWN_KEYS}
                     styles={DROPDOWN_STYLES}
-                    selectedKey={status}
-                    onChange={handleChange}
+                    selectedKey={info.status}
+                    onChange={
+                        info.user.ID === currentUser.User.ID || canEditOthers
+                            ? handleChange
+                            : null
+                    }
+                    disabled={
+                        info.user.ID === currentUser.User.ID
+                            ? false
+                            : !canEditOthers
+                    }
                 />
             </div>
-            {description ? (
+            {info.description ? (
                 <div className={styles.body}>
                     <IconButton
                         onClick={toggleOpen}

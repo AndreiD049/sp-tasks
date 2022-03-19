@@ -1,8 +1,7 @@
 import { Caching } from '@pnp/queryable';
 import { SPFI } from '@pnp/sp';
 import { ISiteUserInfo } from '@pnp/sp/site-users/types';
-import { getNewSP, getSP } from '../../../pnp-preset/pnpjs-presets';
-import { IUser } from '../models/IUser';
+import { getNewSP } from 'sp-preset';
 import { HOUR } from '../utils/constants';
 
 export default class UserService {

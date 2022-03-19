@@ -2,7 +2,8 @@ import { Caching } from '@pnp/queryable';
 import { SPFI } from '@pnp/sp';
 import { IItems } from '@pnp/sp/items';
 import { IList } from '@pnp/sp/lists';
-import { getNewSP } from '../../../pnp-preset/pnpjs-presets';
+import { getHashCode } from '@pnp/core';
+import { getNewSP } from 'sp-preset';
 import ITask from '../models/ITask';
 import { ITasksWebPartProps } from '../TasksWebPart';
 import { processChangeResult } from '../utils/utils';
@@ -27,10 +28,13 @@ class TaskService {
     list: IList;
     listTitle: string;
     lastToken: string;
+    private id: string = 'TASKS';
 
 
     constructor(public props: ITasksWebPartProps) {
-        this.sp = getNewSP('Data').using(Caching());
+        this.sp = getNewSP('Data').using(Caching({
+            keyFactory: (url) => this.id + getHashCode(url),
+        }));
         this.list = this.sp.web.lists.getByTitle(props.tasksListTitle);
         this.listTitle = props.tasksListTitle;
         this.userService = new UserService();
@@ -83,6 +87,18 @@ class TaskService {
     async getTasksByUserTitle(userTitle: string) {
         const user = await this.userService.getUser(userTitle);
         return this.getTasksByUserId(user.Id);
+    }
+
+    /**
+     * Clears the cached items
+     */
+    clearCache() {
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key.startsWith(this.id)) {
+                localStorage.removeItem(key);
+            }
+        }
     }
 
     private _wrap(items: IItems) {
