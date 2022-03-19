@@ -162,11 +162,13 @@ export default class TaskLogsService {
     }
 
     private createLogFromTask(task: ITask, date: Date): Partial<ITaskLog> {
+        const dt = DateTime.fromJSDate(date).toISODate();
         return {
-            Date: DateTime.fromJSDate(date).toISODate(),
+            Date: dt,
             Status: 'Open',
             TaskId: task.ID,
             UserId: task.AssignedTo.ID,
+            UniqueValidation: `${task.ID}-${task.AssignedTo.ID}-${dt}`
         };
     }
 

@@ -108,5 +108,12 @@ export const setupLists = async (properties: ITasksWebPartProps) => {
             Required: false,
             Description: 'Any additional remark',
         });
+
+        await taskLogsExists.list.fields.addText('UniqueValidation', {
+            Required: false,
+            Description: 'Enforce unique values',
+            EnforceUniqueValues: true,
+            Indexed: true,
+        });
     }
 };

@@ -20,4 +20,5 @@ export default interface ITaskLog {
     };
     UserId?: number;
     Remark: string;
+    UniqueValidation?: string;
 }
