@@ -1,7 +1,7 @@
 import { Caching } from '@pnp/queryable';
 import { SPFI } from '@pnp/sp';
 import { ISiteUserInfo } from '@pnp/sp/site-users/types';
-import { getSP } from '../../../pnpjs-presets';
+import { getNewSP, getSP } from '../../../pnp-preset/pnpjs-presets';
 import { IUser } from '../models/IUser';
 import { HOUR } from '../utils/constants';
 
@@ -10,8 +10,8 @@ export default class UserService {
     usersSP: SPFI;
 
     constructor() {
-        this.sp = getSP().using(Caching());
-        this.usersSP = getSP('Users').using(
+        this.sp = getNewSP().using(Caching());
+        this.usersSP = getNewSP('Users').using(
             Caching({
                 expireFunc: (_url: string) =>
                     new Date(new Date().getTime() + HOUR),

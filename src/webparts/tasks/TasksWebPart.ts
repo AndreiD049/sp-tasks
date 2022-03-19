@@ -8,10 +8,8 @@ import {
     PropertyPaneButtonType,
 } from '@microsoft/sp-property-pane';
 import { BaseClientSideWebPart } from '@microsoft/sp-webpart-base';
-
 import * as strings from 'TasksWebPartStrings';
 import Tasks from './components/Tasks';
-import { setupSP } from '../../pnpjs-presets';
 import { setupLists } from './utils/setup-lists';
 import TaskService from './services/tasks';
 import GlobalContext from './utils/GlobalContext';
@@ -19,6 +17,7 @@ import TaskLogsService from './services/tasklogs';
 import UserService from './services/users';
 import TeamService from './services/teams';
 import { USER_WEB_RE } from './utils/constants';
+import { setupSP } from '../../pnp-preset/pnpjs-presets';
 
 export interface ITasksWebPartProps {
     dataSourceRoot: string;
