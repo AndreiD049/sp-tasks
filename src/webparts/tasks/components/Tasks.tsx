@@ -7,11 +7,13 @@ import ITaskLog from '../models/ITaskLog';
 import ITask from '../models/ITask';
 import { DateTime } from 'luxon';
 import DateSelector from './DateSelector';
-import { Persona, Spinner, SpinnerSize } from 'office-ui-fabric-react';
+import { MessageBarType, Persona, Spinner, SpinnerSize } from 'office-ui-fabric-react';
 import UserSelctor from './UserSelector';
 import createState from 'use-persisted-state';
 import { IUser } from '../models/IUser';
 import { MINUTE } from '../utils/constants';
+import { getSortedTaskList } from '../utils/utils';
+import { SPnotify } from 'sp-react-notifications'
 
 const useLocalStorage = createState('selectedUsers');
 const useSessionStorage = createState('selectedDate', sessionStorage);
@@ -19,8 +21,7 @@ const useSessionStorage = createState('selectedDate', sessionStorage);
 interface ITasksPerUser {
     [user: string]: {
         user: IUser;
-        tasks: ITask[];
-        logs: ITaskLog[];
+        result: (ITask | ITaskLog)[];
     };
 }
 
@@ -49,9 +50,9 @@ const Tasks: React.FC = () => {
      * Matches the tasks with the task logs.
      * If there are tasks without match, a task log is created from them.
      * Then, the newly created tasks are retrieved from the list and returned to the client
-     * 
+     *
      * @param tasks - the list of tasks assigned to current user
-     * @param logs - the list of concrete task logs currently created from assigned tasks 
+     * @param logs - the list of concrete task logs currently created from assigned tasks
      * @returns newly created logs
      */
     const checkTasksAndCreateTaskLogs = async (
@@ -74,7 +75,7 @@ const Tasks: React.FC = () => {
     };
 
     /**
-     * Check with the list every few minutes 
+     * Check with the list every few minutes
      * if any changes occured to the tasks currently shown.
      * If any tasks or logs changed, make a force update of info and retrieve everything again.
      */
@@ -132,10 +133,12 @@ const Tasks: React.FC = () => {
                 id === currentUser.User.ID
                     ? currentUser
                     : selectedUsers.find((u) => u.User.ID === id);
+            const userTasks = tasks.filter((t) => t.AssignedTo.ID === id);
+            const userTaskLogs = taskLogs.filter((l) => l.User.ID === id);
+            const userResult = getSortedTaskList(userTasks, userTaskLogs);
             result[id] = {
                 user,
-                tasks: tasks.filter((t) => t.AssignedTo.ID === id),
-                logs: taskLogs.filter((l) => l.User.ID === id),
+                result: userResult,
             };
         });
 
@@ -151,7 +154,7 @@ const Tasks: React.FC = () => {
         setTaskLogs((prev) => prev.map((p) => (p.ID === t.ID ? t : p)));
     };
 
-    const body = loading ? (
+    const body = React.useMemo(() => loading ? (
         <Spinner size={SpinnerSize.large} />
     ) : (
         <div className={styles.container}>
@@ -159,34 +162,27 @@ const Tasks: React.FC = () => {
                 const item = tasksPerUser[id];
                 if (
                     !item ||
-                    (item.logs.length === 0 && item.tasks.length === 0)
+                    (item.result.length === 0)
                 )
                     return null;
                 return (
                     <div className={styles.taskContainer}>
-                        <Persona text={tasksPerUser[id]?.user.User.Title} />
-                        {tasksPerUser[id]?.logs.map((log) => (
+                        <Persona
+                            text={tasksPerUser[id]?.user.User.Title}
+                            imageUrl={`/_layouts/15/userphoto.aspx?AccountName=${tasksPerUser[id]?.user.User.EMail}&Size=M`}
+                        />
+                        {tasksPerUser[id]?.result.map((log) => (
                             <Task
                                 task={log}
                                 handleTaskUpdated={handleTaskUpdate}
                                 key={`log-${log.ID}`}
                             />
                         ))}
-                        {/* if not the same day, show also the tasks */}
-                        {!isSameDay
-                            ? tasksPerUser[id]?.tasks.map((task) => (
-                                  <Task
-                                      task={task}
-                                      handleTaskUpdated={handleTaskUpdate}
-                                      key={`task-${task.ID}`}
-                                  />
-                              ))
-                            : null}
                     </div>
                 );
             })}
         </div>
-    );
+    ), [userIds, tasksPerUser, loading]);
 
     return (
         <div className={styles.tasks}>

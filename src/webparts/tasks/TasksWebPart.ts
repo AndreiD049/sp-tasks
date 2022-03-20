@@ -20,8 +20,6 @@ import { ACCESS_EDIT_OTHERS, USER_WEB_RE } from './utils/constants';
 import { setupSP } from 'sp-preset';
 import PropertyPaneAccessControl, { canCurrentUser, IUserGroupPermissions, setupAccessControl } from 'property-pane-access-control';
 import { InjectHeaders } from '@pnp/queryable';
-import { spfi, SPFx } from '@pnp/sp';
-
 export interface ITasksWebPartProps {
     dataSourceRoot: string;
     tasksListTitle: string;
@@ -76,7 +74,7 @@ export default class TasksWebPart extends BaseClientSideWebPart<ITasksWebPartPro
             },
             useRPM: true,
             rpmTreshold: 800,
-            rpmTracing: true,
+            rpmTracing: false,
             rpmAlerting: true,
             additionalTimelinePipes: [
                 InjectHeaders({
