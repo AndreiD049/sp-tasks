@@ -2,6 +2,7 @@ export type TaskStatus = 'Open' | 'Pending' | 'Finished' | 'Cancelled';
 
 export default interface ITaskLog {
     ID: number;
+    Title: string,
     Task: {
         ID: number;
         Title: string;

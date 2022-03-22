@@ -10,12 +10,6 @@ export default class UserService {
 
     constructor() {
         this.sp = getNewSP().using(Caching());
-        this.usersSP = getNewSP('Users').using(
-            Caching({
-                expireFunc: (_url: string) =>
-                    new Date(new Date().getTime() + HOUR),
-            })
-        );
     }
 
     async getSiteUsers() {

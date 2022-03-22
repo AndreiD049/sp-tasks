@@ -11,6 +11,7 @@ import { getSP } from 'sp-preset';
 
 const LOG_SELECT = [
     'ID',
+    'Title',
     'Task/ID',
     'Task/Title',
     'Task/Description',
@@ -136,11 +137,20 @@ export default class TaskLogsService {
         tasks.forEach((task) => {
             batchSP.web.lists
                 .getByTitle(this.listName)
-                .items.add(this.createLogFromTask(task, date))
+                .items.add(this.castTaskToTaskLog(task, date))
                 .then((r) => res.push(r));
         });
         await execute();
         return res;
+    }
+
+    async createTaskLogFromTask(task: ITask, date?: Date) {
+        if (date === undefined) {
+            date = new Date();
+        }
+
+        const result = await this.list.items.add(this.castTaskToTaskLog(task, date));
+        return result.item.select(...LOG_SELECT).expand(...LOG_EXPAND)();
     }
 
     async updateTaskLog(id: number, update: Partial<ITaskLog>) {
@@ -160,9 +170,10 @@ export default class TaskLogsService {
         );
     }
 
-    private createLogFromTask(task: ITask, date: Date): Partial<ITaskLog> {
+    private castTaskToTaskLog(task: ITask, date: Date): Partial<ITaskLog> {
         const dt = DateTime.fromJSDate(date).toISODate();
         return {
+            Title: task.Title,
             Date: dt,
             Status: 'Open',
             TaskId: task.ID,

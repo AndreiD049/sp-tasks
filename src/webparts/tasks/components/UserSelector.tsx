@@ -9,17 +9,25 @@ export interface IUserSelectorProps
     setUsers: (users: IUser[]) => void;
 }
 
+const isOptionDisabled = (maxPeople: number, optionUser: IUser, users: IUser[]): boolean => {
+    if (users.find((u) => u.User.ID === optionUser.User.ID)) {
+        return false;
+    }
+    return maxPeople <= users.length;
+}
+
 const UserSelctor: React.FC<IUserSelectorProps> = (props) => {
-    const { teamMembers } = React.useContext(GlobalContext);
+    const { teamMembers, maxPeople } = React.useContext(GlobalContext);
 
     const options = React.useMemo(
         () =>
             teamMembers.map((member) => ({
                 key: member.User.ID,
                 text: member.User.Title,
+                disabled: isOptionDisabled(maxPeople, member, props.users),
                 data: member,
             })),
-        [teamMembers]
+        [teamMembers, props.users]
     );
 
     const selectedKeys = React.useMemo(
@@ -38,6 +46,7 @@ const UserSelctor: React.FC<IUserSelectorProps> = (props) => {
     return (
         <div className={props.className}>
             <ComboBox
+                errorMessage={(props.users.length >= maxPeople) ? 'Maximum number of users selected' : ''}
                 multiSelect
                 options={options}
                 selectedKey={selectedKeys}

@@ -13,7 +13,6 @@ import createState from 'use-persisted-state';
 import { IUser } from '../models/IUser';
 import { MINUTE } from '../utils/constants';
 import { getSortedTaskList } from '../utils/utils';
-import { SPnotify } from 'sp-react-notifications'
 
 const useLocalStorage = createState('selectedUsers');
 const useSessionStorage = createState('selectedDate', sessionStorage);
@@ -193,6 +192,7 @@ const Tasks: React.FC = () => {
                         setLoading(true);
                         setDate(val);
                     }}
+                    loading={loading}
                     className={styles.selector}
                 />
                 <UserSelctor

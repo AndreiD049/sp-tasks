@@ -14,6 +14,7 @@ export interface IGlobalContext {
     currentUser: IUser;
     teamMembers: IUser[];
     canEditOthers: boolean;
+    maxPeople: number;
 }
 
 const GlobalContext = React.createContext<IGlobalContext>({
@@ -24,6 +25,7 @@ const GlobalContext = React.createContext<IGlobalContext>({
     currentUser: null,
     teamMembers: null,
     canEditOthers: false,
+    maxPeople: 1,
 });
 
 export default GlobalContext;

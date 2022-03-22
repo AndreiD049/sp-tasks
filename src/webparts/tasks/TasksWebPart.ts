@@ -6,6 +6,7 @@ import {
     PropertyPaneTextField,
     PropertyPaneButton,
     PropertyPaneButtonType,
+    PropertyPaneSlider,
 } from '@microsoft/sp-property-pane';
 import { BaseClientSideWebPart } from '@microsoft/sp-webpart-base';
 import * as strings from 'TasksWebPartStrings';
@@ -20,11 +21,14 @@ import { ACCESS_EDIT_OTHERS, USER_WEB_RE } from './utils/constants';
 import { setupSP } from 'sp-preset';
 import PropertyPaneAccessControl, { canCurrentUser, IUserGroupPermissions, setupAccessControl } from 'property-pane-access-control';
 import { InjectHeaders } from '@pnp/queryable';
+import { MessageBarType } from 'office-ui-fabric-react';
+
 export interface ITasksWebPartProps {
     dataSourceRoot: string;
     tasksListTitle: string;
     taskLogsListTitle: string;
     staffListUrl: string;
+    maxPeople: number;
     userColumn: string;
     teamColumn: string;
     roleColumn: string;
@@ -51,6 +55,7 @@ export default class TasksWebPart extends BaseClientSideWebPart<ITasksWebPartPro
                     currentUser: await teamService.getCurrentUser(),
                     teamMembers: await teamService.getCurrentUserTeamMembers(),
                     canEditOthers: await canCurrentUser(ACCESS_EDIT_OTHERS, this.properties.permissions),
+                    maxPeople: this.properties.maxPeople,
                 },
             },
             React.createElement(Tasks)
@@ -122,6 +127,12 @@ export default class TasksWebPart extends BaseClientSideWebPart<ITasksWebPartPro
                             groupFields: [
                                 PropertyPaneTextField('staffListUrl', {
                                     label: strings.StaffListLabel,
+                                }),
+                                PropertyPaneSlider('maxPeople', {
+                                    label: 'Maximum # of users',
+                                    min: 1,
+                                    max: 10,
+                                    value: this.properties.maxPeople || 0,
                                 }),
                                 PropertyPaneTextField('userColumn', {
                                     label: strings.UserColumnNameLabel,

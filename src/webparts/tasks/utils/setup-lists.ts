@@ -61,10 +61,6 @@ export const setupLists = async (properties: ITasksWebPartProps) => {
             NoCrawl: true,
         });
 
-        await taskLogsExists.list.fields.getByTitle('Title').update({
-            Required: false,
-        });
-
         await taskLogsExists.list.fields.addLookup('Task', {
             LookupListId: taskList.Id,
             LookupFieldName: 'Title',
@@ -113,6 +109,22 @@ export const setupLists = async (properties: ITasksWebPartProps) => {
             Required: false,
             Description: 'Enforce unique values',
             EnforceUniqueValues: true,
+            Indexed: true,
+        });
+
+        // Helper columns to track reassignement and early pickup of tasks
+        await taskLogsExists.list.fields.addDateTime('PickupDate', {
+            DisplayFormat: DateTimeFieldFormatType.DateOnly,
+            Required: false,
+            Description: 'Date when task was picked up',
+            Indexed: true,
+        });
+
+        // Who was the original user of the task.
+        // Will be filled in if the task was reassigned to another user
+        await taskLogsExists.list.fields.addUser('OriginalUser', {
+            Description: 'Original User related to the task',
+            Required: false,
             Indexed: true,
         });
     }

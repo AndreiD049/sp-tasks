@@ -90,7 +90,7 @@ const Task: FC<ITaskProps> = (props) => {
         }
         return {
             description: props.task.Task.Description,
-            title: props.task.Task.Title,
+            title: props.task.Title,
             user: props.task.User,
             date: DateTime.fromISO(props.task.Date).toLocaleString(
                 DateTime.DATE_SHORT
@@ -117,7 +117,10 @@ const Task: FC<ITaskProps> = (props) => {
     }, []);
 
     const handleChange = async (_: any, option: IDropdownOption) => {
-        const log: ITaskLog = 'Date' in props.task ? props.task : null; // TODO: create a tasklog from task
+        const log: ITaskLog = 'Date' in props.task ?
+            props.task : 
+            await TaskLogsService.createTaskLogFromTask(props.task);
+
         const update: Partial<ITaskLog> = {
             Status: option.key as TaskStatus,
         };

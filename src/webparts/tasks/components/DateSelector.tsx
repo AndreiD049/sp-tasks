@@ -5,6 +5,7 @@ import * as React from 'react';
 export interface IDateSelectorProps
     extends React.HTMLAttributes<HTMLDivElement> {
     date: Date;
+    loading: boolean;
     setDate: (d: Date) => void;
 }
 
@@ -31,7 +32,7 @@ const DateSelector: React.FC<IDateSelectorProps> = (props) => {
             <IconButton
                 iconProps={{ iconName: 'ChevronLeft' }}
                 onClick={changeDate.bind({}, -1)}
-                disabled={dt <= minDate}
+                disabled={props.loading || dt <= minDate}
             />
             <Text
                 style={{
@@ -46,7 +47,7 @@ const DateSelector: React.FC<IDateSelectorProps> = (props) => {
             <IconButton
                 iconProps={{ iconName: 'ChevronRight' }}
                 onClick={changeDate.bind({}, 1)}
-                disabled={dt >= maxDate}
+                disabled={props.loading || dt >= maxDate}
             />
         </div>
     );
