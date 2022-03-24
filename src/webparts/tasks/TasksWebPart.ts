@@ -22,6 +22,7 @@ import { setupSP } from 'sp-preset';
 import PropertyPaneAccessControl, { canCurrentUser, IUserGroupPermissions, setupAccessControl } from 'property-pane-access-control';
 import { InjectHeaders } from '@pnp/queryable';
 import { MessageBarType } from 'office-ui-fabric-react';
+import { useVisibility } from 'react-visibility-hook';
 
 export interface ITasksWebPartProps {
     dataSourceRoot: string;
@@ -131,7 +132,7 @@ export default class TasksWebPart extends BaseClientSideWebPart<ITasksWebPartPro
                                 PropertyPaneSlider('maxPeople', {
                                     label: 'Maximum # of users',
                                     min: 1,
-                                    max: 10,
+                                    max: 15,
                                     value: this.properties.maxPeople || 0,
                                 }),
                                 PropertyPaneTextField('userColumn', {

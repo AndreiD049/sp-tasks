@@ -5,15 +5,15 @@
     padding-bottom: 5em;
 
     :global(.pending) {
-        background-color: transparentize($color: $ms-color-yellow, $amount: .9);
+        background-color: lighten($color: $ms-color-yellow, $amount: 40);
     }
 
     :global(.finished) {
-        background-color: transparentize($color: $ms-color-green, $amount: .9);
+        background-color: lighten($color: $ms-color-green, $amount: 65);
     }
 
     :global(.cancelled) {
-        background-color: transparentize($color: $ms-color-red, $amount: .9);
+        background-color: lighten($color: $ms-color-red, $amount: 45);
     }
 
     .commandbar {

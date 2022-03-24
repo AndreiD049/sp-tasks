@@ -20,16 +20,33 @@ export function isTask(elem: ITask | ITaskLog): elem is ITask {
     return (elem as ITask).AssignedTo !== undefined;
 }
 
-function getTime(elem: ITask | ITaskLog) {
+export function getTaskId(elem: ITask | ITaskLog) {
+    return isTask(elem) ? elem.ID : elem.Task.ID;
+}
+
+export function getTime(elem: ITask | ITaskLog) {
     if (isTask(elem)) {
         return elem.Time;
     }
     return elem.Task.Time;
 }
 
+export function reorder<T>(list: T[], startIndex, endIndex): T[] {
+  const result = Array.from(list);
+  const [removed] = result.splice(startIndex, 1);
+  result.splice(endIndex, 0, removed);
+
+  return result;
+};
+export interface ICustomSorting {
+    [id: string]: number[];
+}
+
 export function getSortedTaskList(
     tasks: ITask[],
-    taskLogs: ITaskLog[]
+    taskLogs: ITaskLog[],
+    userId: number,
+    customSorting: ICustomSorting = {},
 ): (ITask | ITaskLog)[] {
     const taskLogSet = new Set(taskLogs.map((t) => t.Task.ID));
     let result: (ITask | ITaskLog)[] = [
@@ -41,5 +58,15 @@ export function getSortedTaskList(
         const dtB = DateTime.fromISO(getTime(b)).toISOTime();
         return dtA < dtB ? -1 : 1;
     })
+    if (customSorting[userId.toString()] !== undefined) {
+        // Map [task id]: current index
+        const map = new Map(customSorting[userId.toString()].map((id, idx) => [id, idx]));
+        result.sort((t1, t2) => {
+            const id1 = getTaskId(t1);
+            const id2 = getTaskId(t2);
+            if (!map.has(id1) || !map.has(id2)) return 0;
+            return map.get(id1) - map.get(id2);
+        });
+    }
     return result;
 }

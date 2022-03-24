@@ -13,7 +13,7 @@
   },
   "externals": {
     "sp-react-notifications": {
-      "path": "https://cdn.jsdelivr.net/npm/sp-react-notifications@1.0.19/dist/index.amd.js",
+      "path": "https://cdn.jsdelivr.net/npm/sp-react-notifications@1.0.20/dist/index.amd.js",
       "globalName": "spReactNotifications"
     },
     "luxon": {

@@ -11,6 +11,7 @@ import {
 } from 'office-ui-fabric-react';
 import * as React from 'react';
 import { FC } from 'react';
+import { Draggable } from 'react-beautiful-dnd';
 import ITask from '../../models/ITask';
 import ITaskLog, { TaskStatus } from '../../models/ITaskLog';
 import { ITaskInfo } from '../../models/ITaskProperties';
@@ -65,6 +66,7 @@ const DROPDOWN_KEYS: { key: TaskStatus; text: string }[] = [
 
 export interface ITaskProps {
     task: ITaskLog | ITask;
+    index: number;
     handleTaskUpdated: (task: ITaskLog) => void;
 }
 
@@ -117,9 +119,10 @@ const Task: FC<ITaskProps> = (props) => {
     }, []);
 
     const handleChange = async (_: any, option: IDropdownOption) => {
-        const log: ITaskLog = 'Date' in props.task ?
-            props.task : 
-            await TaskLogsService.createTaskLogFromTask(props.task);
+        const log: ITaskLog =
+            'Date' in props.task
+                ? props.task
+                : await TaskLogsService.createTaskLogFromTask(props.task);
 
         const update: Partial<ITaskLog> = {
             Status: option.key as TaskStatus,
@@ -136,52 +139,68 @@ const Task: FC<ITaskProps> = (props) => {
     };
 
     return (
-        <div className={`${styles.task} ${info.status.toLowerCase()}`}>
-            <div className={styles.header}>
-                <Text variant="mediumPlus">{info.title}</Text>
-                <Persona
-                    className={styles.person}
-                    text={info.user.Title}
-                    size={PersonaSize.size24}
-                    title={info.user.EMail}
-                    hidePersonaDetails
-                />
-            </div>
-            <div className={styles.subheader}>
-                <Text variant="medium">{info.date}</Text>
-                <Text variant="medium" className={styles.hours}>
-                    {' '}
-                    {info.time}{' '}
-                </Text>
-            </div>
-            <div className={styles.status}>
-                <Text variant="medium">Status:</Text>
-                <Dropdown
-                    options={DROPDOWN_KEYS}
-                    styles={DROPDOWN_STYLES}
-                    selectedKey={info.status}
-                    onChange={
-                        info.user.ID === currentUser.User.ID || canEditOthers
-                            ? handleChange
-                            : null
-                    }
-                    disabled={
-                        info.user.ID === currentUser.User.ID
-                            ? false
-                            : !canEditOthers
-                    }
-                />
-            </div>
-            {info.description ? (
-                <div className={styles.body}>
-                    <IconButton
-                        onClick={toggleOpen}
-                        iconProps={{ iconName: open ? OPEN_ICON : CLOSED_ICON }}
-                    />
-                    {body}
+        <Draggable
+            key={props.task.ID.toString()}
+            draggableId={props.task.ID.toString()}
+            index={props.index}
+        >
+            {(provided) => (
+                <div 
+                    ref={provided.innerRef}
+                    {...provided.draggableProps}
+                    {...provided.dragHandleProps}
+                    className={`${styles.task} ${info.status.toLowerCase()}`}
+                >
+                    <div className={styles.header}>
+                        <Text variant="mediumPlus">{info.title}</Text>
+                        <Persona
+                            className={styles.person}
+                            text={info.user.Title}
+                            size={PersonaSize.size24}
+                            title={info.user.EMail}
+                            hidePersonaDetails
+                        />
+                    </div>
+                    <div className={styles.subheader}>
+                        <Text variant="medium">{info.date}</Text>
+                        <Text variant="medium" className={styles.hours}>
+                            {' '}
+                            {info.time}{' '}
+                        </Text>
+                    </div>
+                    <div className={styles.status}>
+                        <Text variant="medium">Status:</Text>
+                        <Dropdown
+                            options={DROPDOWN_KEYS}
+                            styles={DROPDOWN_STYLES}
+                            selectedKey={info.status}
+                            onChange={
+                                info.user.ID === currentUser.User.ID ||
+                                canEditOthers
+                                    ? handleChange
+                                    : null
+                            }
+                            disabled={
+                                info.user.ID === currentUser.User.ID
+                                    ? false
+                                    : !canEditOthers
+                            }
+                        />
+                    </div>
+                    {info.description ? (
+                        <div className={styles.body}>
+                            <IconButton
+                                onClick={toggleOpen}
+                                iconProps={{
+                                    iconName: open ? OPEN_ICON : CLOSED_ICON,
+                                }}
+                            />
+                            {body}
+                        </div>
+                    ) : null}
                 </div>
-            ) : null}
-        </div>
+            )}
+        </Draggable>
     );
 };
 
