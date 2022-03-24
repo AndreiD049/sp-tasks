@@ -1,7 +1,13 @@
 import { DateTime } from 'luxon';
 import ITask from '../models/ITask';
 import ITaskLog from '../models/ITaskLog';
+import TaskLogsService from '../services/tasklogs';
+import TaskService from '../services/tasks';
 import { CHANGE_DELETE_RE, CHANGE_ROW_RE, CHANGE_TOKEN_RE } from './constants';
+
+export interface ICustomSorting {
+    [id: string]: number[];
+}
 
 export function processChangeResult(
     result: string,
@@ -32,35 +38,34 @@ export function getTime(elem: ITask | ITaskLog) {
 }
 
 export function reorder<T>(list: T[], startIndex, endIndex): T[] {
-  const result = Array.from(list);
-  const [removed] = result.splice(startIndex, 1);
-  result.splice(endIndex, 0, removed);
+    const result = Array.from(list);
+    const [removed] = result.splice(startIndex, 1);
+    result.splice(endIndex, 0, removed);
 
-  return result;
-};
-export interface ICustomSorting {
-    [id: string]: number[];
+    return result;
 }
 
 export function getSortedTaskList(
     tasks: ITask[],
     taskLogs: ITaskLog[],
     userId: number,
-    customSorting: ICustomSorting = {},
+    customSorting: ICustomSorting = {}
 ): (ITask | ITaskLog)[] {
     const taskLogSet = new Set(taskLogs.map((t) => t.Task.ID));
     let result: (ITask | ITaskLog)[] = [
         ...taskLogs,
-        ...tasks.filter(t => !taskLogSet.has(t.ID))
+        ...tasks.filter((t) => !taskLogSet.has(t.ID)),
     ];
     result.sort((a, b) => {
         const dtA = DateTime.fromISO(getTime(a)).toISOTime();
         const dtB = DateTime.fromISO(getTime(b)).toISOTime();
         return dtA < dtB ? -1 : 1;
-    })
+    });
     if (customSorting[userId.toString()] !== undefined) {
         // Map [task id]: current index
-        const map = new Map(customSorting[userId.toString()].map((id, idx) => [id, idx]));
+        const map = new Map(
+            customSorting[userId.toString()].map((id, idx) => [id, idx])
+        );
         result.sort((t1, t2) => {
             const id1 = getTaskId(t1);
             const id2 = getTaskId(t2);
@@ -69,4 +74,34 @@ export function getSortedTaskList(
         });
     }
     return result;
+}
+
+/**
+ * Matches the tasks with the task logs.
+ * If there are tasks without match, a task log is created from them.
+ * Then, the newly created tasks are retrieved from the list and returned to the client
+ *
+ * @param tasks - the list of tasks assigned to current user
+ * @param logs - the list of concrete task logs currently created from assigned tasks
+ * @returns newly created logs
+ */
+export async function checkTasksAndCreateTaskLogs(
+    tasks: ITask[],
+    logs: ITaskLog[],
+    date: Date,
+    logService: TaskLogsService
+) {
+    let missing: ITask[] = [];
+    let logSet = new Set(logs.map((log) => log.Task.ID));
+    tasks.forEach((task) => {
+        if (!logSet.has(task.ID)) {
+            missing.push(task);
+        }
+    });
+    const results = await logService.createTaskLogs(missing, date);
+    let newLogs =
+        results.length === 0
+            ? []
+            : await logService.getTaskLogsFromAddResult(results);
+    return newLogs;
 }

@@ -1,4 +1,3 @@
-import { PropertyPaneDynamicFieldSet } from '@microsoft/sp-property-pane';
 import { DateTime } from 'luxon';
 import {
     Dropdown,
@@ -12,10 +11,10 @@ import {
 import * as React from 'react';
 import { FC } from 'react';
 import { Draggable } from 'react-beautiful-dnd';
-import ITask from '../../models/ITask';
-import ITaskLog, { TaskStatus } from '../../models/ITaskLog';
-import { ITaskInfo } from '../../models/ITaskProperties';
-import GlobalContext from '../../utils/GlobalContext';
+import ITask from '../models/ITask';
+import ITaskLog, { TaskStatus } from '../models/ITaskLog';
+import { ITaskInfo } from '../models/ITaskProperties';
+import GlobalContext from '../utils/GlobalContext';
 import styles from './Task.module.scss';
 
 const CLOSED_ICON = 'ChevronDown';
