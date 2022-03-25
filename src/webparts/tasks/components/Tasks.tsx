@@ -1,12 +1,8 @@
-import {
-    MessageBarType,
-    Spinner,
-    SpinnerSize,
-} from 'office-ui-fabric-react';
+import { cloneDeep } from '@microsoft/sp-lodash-subset';
+import { MessageBarType, Spinner, SpinnerSize } from 'office-ui-fabric-react';
 import * as React from 'react';
 import { useContext } from 'react';
-import { DragDropContext, Droppable, DropResult } from 'react-beautiful-dnd';
-import { SPnotify } from 'sp-react-notifications';
+import { DragDropContext, DropResult } from 'react-beautiful-dnd';
 import createState from 'use-persisted-state';
 import useSyncTasks from '../hooks/useSyncTasks';
 import { useTasks } from '../hooks/useTasks';
@@ -14,19 +10,25 @@ import { useTasksPerUser } from '../hooks/useTasksPerUser';
 import ITaskLog from '../models/ITaskLog';
 import { IUser } from '../models/IUser';
 import GlobalContext from '../utils/GlobalContext';
-import { getTaskId, ICustomSorting, reorder } from '../utils/utils';
-import DateSelector from './DateSelector';
+import {
+    getTaskId,
+    ICustomSorting,
+    getReassignedTaskLog,
+    reorder,
+    move,
+} from '../utils/utils';
 import Header from './Header';
 import styles from './Tasks.module.scss';
 import UserColumn from './UserColumn';
-import UserSelctor from './UserSelector';
+import { SPnotify } from 'sp-react-notifications';
+import { List } from 'sp-preset';
 
 const useSelectedUsers = createState('selectedUsers');
 const useCustomSorting = createState('customTaskSorting');
 const useSelectedDate = createState('selectedDate', sessionStorage);
 
 const Tasks: React.FC = () => {
-    const { currentUser, canEditOthers } = useContext(GlobalContext);
+    const { currentUser, TaskLogsService } = useContext(GlobalContext);
 
     const [dateStr, setDate]: [Date, any] = useSelectedDate(new Date());
     const date = React.useMemo(() => new Date(dateStr), [dateStr]);
@@ -83,15 +85,66 @@ const Tasks: React.FC = () => {
         setTaskLogs((prev) => prev.map((p) => (p.ID === t.ID ? t : p)));
     };
 
-    const handleTaskDropped = ({ destination, source }: DropResult) => {
+    /**
+     * TODO: Refactor. This function is pretty long and chaotic
+     */
+    const handleTaskDropped = async ({
+        destination,
+        source,
+        draggableId,
+    }: DropResult) => {
         if (!source || !destination) return;
+        /**
+         * Reassign to another user.
+         * When reassigning to another user, the field user is updated
+         * But original user is still mentioned in OriginalUser field
+         * Unique validation field is also not updated,
+         * to prevent task log being recreated upon refresh or sync
+         */
         if (destination.droppableId !== source.droppableId) {
-            return SPnotify({
-                message: 'Reassigning tasks is not yet possible!',
-                messageType: MessageBarType.error,
-            });
-        }
-        if (destination.index !== source.index) {
+            const originalLogs = cloneDeep(taskLogs);
+            const originalLog = originalLogs.find((l) => l.ID === +draggableId);
+            // Prerender updated collumns
+            setTaskLogs((prev) =>
+                prev.map((log) =>
+                    log.ID === +draggableId
+                        ? getReassignedTaskLog(log, +destination.droppableId)
+                        : log
+                )
+            );
+            const moveResults = move(
+                tasksPerUser[source.droppableId].result,
+                tasksPerUser[destination.droppableId].result,
+                source.index,
+                destination.index
+            );
+            setCustomSorting((prev) => ({
+                ...prev,
+                [source.droppableId]: moveResults.from.map((i) => getTaskId(i)),
+                [destination.droppableId]: moveResults.to.map((i) => getTaskId(i)),
+            }));
+            try {
+                const updated = await TaskLogsService.updateTaskLog(
+                    +draggableId,
+                    {
+                        UserId: +destination.droppableId,
+                        OriginalUserId:
+                            originalLog.OriginalUser?.ID ?? +source.droppableId,
+                    }
+                );
+                setTaskLogs((prev) =>
+                    prev.map((log) => (log.ID === updated.ID ? updated : log))
+                );
+            } catch (e) {
+                // Update failed, return state back
+                SPnotify({
+                    message: e.message,
+                    messageType: MessageBarType.error,
+                    timeout: 10000,
+                });
+                setTaskLogs(originalLogs);
+            }
+        } else {
             let list = tasksPerUser[source.droppableId].result;
             list = reorder(list, source.index, destination.index);
             setCustomSorting((prev) => ({
@@ -109,8 +162,7 @@ const Tasks: React.FC = () => {
                 {userIds.map((id) => {
                     const item = tasksPerUser[id];
                     // If user has no tasks assigned to him, do not show
-                    if (!item || item.result.length === 0) return null;
-
+                    if (!item) return null;
                     return (
                         <UserColumn
                             tasksPerUser={tasksPerUser}
@@ -126,7 +178,7 @@ const Tasks: React.FC = () => {
     return (
         <DragDropContext onDragEnd={handleTaskDropped}>
             <div className={styles.tasks}>
-                <Header 
+                <Header
                     date={date}
                     setDate={setDate}
                     loading={loading}

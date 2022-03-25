@@ -43,6 +43,7 @@
         color: $ms-color-neutralPrimary;
         display: flex;
         flex-flow: column;
+        min-width: calc(300px + 1em);
         align-items: stretch;
         padding: 1em;
         border-left-color: '[theme: themePrimary, default: #0078d7]';

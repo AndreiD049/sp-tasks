@@ -1,8 +1,8 @@
+import { cloneDeep } from '@microsoft/sp-lodash-subset';
 import { DateTime } from 'luxon';
 import ITask from '../models/ITask';
 import ITaskLog from '../models/ITaskLog';
 import TaskLogsService from '../services/tasklogs';
-import TaskService from '../services/tasks';
 import { CHANGE_DELETE_RE, CHANGE_ROW_RE, CHANGE_TOKEN_RE } from './constants';
 
 export interface ICustomSorting {
@@ -45,17 +45,43 @@ export function reorder<T>(list: T[], startIndex, endIndex): T[] {
     return result;
 }
 
+export function move<T>(
+    listFrom: T[],
+    listTo: T[],
+    indexFrom,
+    indexTo
+): {
+    from: T[];
+    to: T[];
+} {
+    const cloneFrom = cloneDeep(listFrom);
+    const cloneTo = cloneDeep(listTo);
+
+    const [removed] = cloneFrom.splice(indexFrom, 1);
+    cloneTo.splice(indexTo, 0, removed);
+    return {
+        from: cloneFrom,
+        to: cloneTo,
+    };
+}
+
+export function getReassignedTaskLog(log: ITaskLog, toUser: number): ITaskLog {
+    return {
+        ...log,
+        User: {
+            ...log.User,
+            ID: toUser,
+        },
+    };
+}
+
 export function getSortedTaskList(
     tasks: ITask[],
     taskLogs: ITaskLog[],
     userId: number,
     customSorting: ICustomSorting = {}
 ): (ITask | ITaskLog)[] {
-    const taskLogSet = new Set(taskLogs.map((t) => t.Task.ID));
-    let result: (ITask | ITaskLog)[] = [
-        ...taskLogs,
-        ...tasks.filter((t) => !taskLogSet.has(t.ID)),
-    ];
+    let result: (ITask | ITaskLog)[] = [...taskLogs, ...tasks];
     result.sort((a, b) => {
         const dtA = DateTime.fromISO(getTime(a)).toISOTime();
         const dtB = DateTime.fromISO(getTime(b)).toISOTime();

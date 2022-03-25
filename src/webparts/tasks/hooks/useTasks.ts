@@ -31,9 +31,9 @@ export function useTasks(
     React.useEffect(() => {
         async function run() {
             const tasks = await TaskService.getTasksByMultipleUserIds(userIds);
-            setTasks(tasks);
+            let logs: ITaskLog[] = [];
             if (isSameDay) {
-                const logs = await TaskLogsService.getTaskLogsByUserIds(
+                logs = await TaskLogsService.getTaskLogsByUserIds(
                     date,
                     userIds
                 );
@@ -43,14 +43,17 @@ export function useTasks(
                     date,
                     TaskLogsService
                 );
-                setTaskLogs(logs.concat(newTasks));
+                logs = logs.concat(newTasks);
+                setTaskLogs(logs);
             } else {
-                const logs = await TaskLogsService.getTaskLogsByUserIds(
+                logs = await TaskLogsService.getTaskLogsByUserIds(
                     date,
                     userIds
                 );
                 setTaskLogs(logs);
             }
+            const logSet = new Set(logs.map((log) => log.Task.ID));
+            setTasks(tasks.filter((task) => !logSet.has(task.ID)));
             setLoading(false);
         }
         run();

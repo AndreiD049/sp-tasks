@@ -24,9 +24,10 @@ const LOG_SELECT = [
     'User/Title',
     'User/EMail',
     'Remark',
+    'OriginalUser/ID',
 ];
 
-const LOG_EXPAND = ['Task', 'User'];
+const LOG_EXPAND = ['Task', 'User', 'OriginalUser'];
 
 export default class TaskLogsService {
     userService: UserService;
@@ -153,7 +154,7 @@ export default class TaskLogsService {
         return result.item.select(...LOG_SELECT).expand(...LOG_EXPAND)();
     }
 
-    async updateTaskLog(id: number, update: Partial<ITaskLog>) {
+    async updateTaskLog(id: number, update: Partial<ITaskLog>): Promise<ITaskLog> {
         return (await this.list.items.getById(id).update(update)).item
             .select(...LOG_SELECT)
             .expand(...LOG_EXPAND)();

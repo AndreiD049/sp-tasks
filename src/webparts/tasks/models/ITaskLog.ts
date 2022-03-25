@@ -22,4 +22,9 @@ export default interface ITaskLog {
     UserId?: number;
     Remark: string;
     UniqueValidation?: string;
+    PickupDate?: string;
+    OriginalUserId?: number;
+    OriginalUser: {
+        ID: number;
+    };
 }
