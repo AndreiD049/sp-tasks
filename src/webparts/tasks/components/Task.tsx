@@ -15,6 +15,7 @@ import ITask from '../models/ITask';
 import ITaskLog, { TaskStatus } from '../models/ITaskLog';
 import { ITaskInfo } from '../models/ITaskProperties';
 import GlobalContext from '../utils/GlobalContext';
+import { getTaskUniqueId, isTask } from '../utils/utils';
 import styles from './Task.module.scss';
 
 const CLOSED_ICON = 'ChevronDown';
@@ -67,6 +68,7 @@ export interface ITaskProps {
     task: ITaskLog | ITask;
     index: number;
     handleTaskUpdated: (task: ITaskLog) => void;
+    date: Date;
 }
 
 const Task: FC<ITaskProps> = (props) => {
@@ -80,7 +82,7 @@ const Task: FC<ITaskProps> = (props) => {
                 description: props.task.Description,
                 title: props.task.Title,
                 user: props.task.AssignedTo,
-                date: DateTime.fromJSDate(new Date()).toLocaleString(
+                date: DateTime.fromJSDate(props.date).toLocaleString(
                     DateTime.DATE_SHORT
                 ),
                 time: DateTime.fromISO(props.task.Time).toLocaleString(
@@ -118,20 +120,28 @@ const Task: FC<ITaskProps> = (props) => {
     }, []);
 
     const handleChange = async (_: any, option: IDropdownOption) => {
-        const log: ITaskLog =
-            'Date' in props.task
+        const log: ITaskLog = !isTask(props.task)
                 ? props.task
-                : await TaskLogsService.createTaskLogFromTask(props.task);
+                : await TaskLogsService.createTaskLogFromTask(props.task, props.date);
 
         const update: Partial<ITaskLog> = {
             Status: option.key as TaskStatus,
         };
         switch (update.Status) {
+            case 'Open':
+                update.PickupDate = null;
+                break;
             case 'Pending':
+                update.PickupDate = DateTime.now().toISODate();
                 update.DateTimeStarted = log.DateTimeStarted ?? new Date();
                 break;
             case 'Finished':
                 update.DateTimeFinished = log.DateTimeFinished ?? new Date();
+                update.PickupDate = DateTime.now().toISODate();
+                break;
+            case 'Cancelled':
+                update.PickupDate = null;
+                break;
         }
         const updated = await TaskLogsService.updateTaskLog(log.ID, update);
         props.handleTaskUpdated(updated);
@@ -139,8 +149,8 @@ const Task: FC<ITaskProps> = (props) => {
 
     return (
         <Draggable
-            key={props.task.ID.toString()}
-            draggableId={props.task.ID.toString()}
+            key={getTaskUniqueId(props.task)}
+            draggableId={getTaskUniqueId(props.task)}
             index={props.index}
         >
             {(provided) => (

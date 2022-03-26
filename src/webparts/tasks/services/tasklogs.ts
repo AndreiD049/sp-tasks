@@ -83,7 +83,7 @@ export default class TaskLogsService {
         const list = batchedSP.web.lists.getByTitle(this.listName);
         ids.forEach((id) => {
             this._wrap(
-                list.items.filter(`(Date eq '${dt}') and (UserId eq ${id})`)
+                list.items.filter(`((Date eq '${dt}') or (PickupDate eq '${dt}')) and ((UserId eq ${id}) or (OriginalUserId eq ${id}))`)
             )().then((r) => (res = res.concat(r)));
         });
 
@@ -145,7 +145,7 @@ export default class TaskLogsService {
         return res;
     }
 
-    async createTaskLogFromTask(task: ITask, date?: Date) {
+    async createTaskLogFromTask(task: ITask, date?: Date): Promise<ITaskLog> {
         if (date === undefined) {
             date = new Date();
         }

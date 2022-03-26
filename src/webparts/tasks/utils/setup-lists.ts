@@ -3,7 +3,9 @@ import {
     DateTimeFieldFormatType,
     DateTimeFieldFriendlyFormatType,
 } from '@pnp/sp/fields';
+import { MessageBarType } from 'office-ui-fabric-react';
 import { getSP } from 'sp-preset';
+import { SPnotify } from 'sp-react-notifications';
 import { ITasksWebPartProps } from '../TasksWebPart';
 
 export const setupLists = async (properties: ITasksWebPartProps) => {
@@ -11,6 +13,11 @@ export const setupLists = async (properties: ITasksWebPartProps) => {
 
     // make sure 'Task' list exists
     const taskExists = await sp.web.lists.ensure(properties.tasksListTitle);
+
+    SPnotify({
+        message: 'Please wait. Creating lists',
+        messageType: MessageBarType.warning,
+    });
 
     if (taskExists.created) {
         await taskExists.list.update({
@@ -38,6 +45,13 @@ export const setupLists = async (properties: ITasksWebPartProps) => {
             EditFormat: ChoiceFieldFormatType.Dropdown,
             FillInChoice: false,
             Description: 'Describes how often the task needs to be performed',
+        });
+
+        await taskExists.list.fields.addMultiChoice('WeeklyDays', {
+            Choices: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+            Required: false,
+            FillInChoice: false,
+            Description: 'Choose the week days when the task should be performed. Only valid when Type is Weekly.',
         });
 
         await taskExists.list.fields.addDateTime('Time', {
@@ -128,4 +142,9 @@ export const setupLists = async (properties: ITasksWebPartProps) => {
             Indexed: true,
         });
     }
+    
+    SPnotify({
+        message: 'All lists were created successfully.',
+        messageType: MessageBarType.success,
+    });
 };

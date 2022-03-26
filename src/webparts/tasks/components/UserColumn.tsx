@@ -1,3 +1,4 @@
+import { PropertyPaneSlider } from '@microsoft/sp-property-pane';
 import { Persona } from 'office-ui-fabric-react';
 import * as React from 'react';
 import { FC } from 'react';
@@ -5,7 +6,7 @@ import { Droppable } from 'react-beautiful-dnd';
 import { ITasksPerUser } from '../hooks/useTasksPerUser';
 import ITaskLog from '../models/ITaskLog';
 import GlobalContext from '../utils/GlobalContext';
-import { getTaskId } from '../utils/utils';
+import { getTaskUniqueId } from '../utils/utils';
 import Task from './Task';
 import styles from './Tasks.module.scss';
 
@@ -13,12 +14,14 @@ export interface IUserColumnsProps {
     tasksPerUser: ITasksPerUser;
     id: number;
     handleTaskUpdated: (t: ITaskLog) => void;
+    date: Date;
 }
 
 const UserColumn: FC<IUserColumnsProps> = ({
     tasksPerUser,
     id,
     handleTaskUpdated,
+    date,
 }) => {
     const { canEditOthers } = React.useContext(GlobalContext);
     return (
@@ -44,8 +47,9 @@ const UserColumn: FC<IUserColumnsProps> = ({
                             <Task
                                 task={task}
                                 index={index}
+                                date={date}
                                 handleTaskUpdated={ handleTaskUpdated }
-                                key={getTaskId(task)}
+                                key={getTaskUniqueId(task)}
                             />
                         )
                     )}

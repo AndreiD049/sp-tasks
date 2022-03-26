@@ -18,6 +18,7 @@ const TASK_SELECT = [
     'AssignedTo/EMail',
     'Time',
     'Type',
+    'WeeklyDays',
 ];
 
 const TASK_EXPAND = ['AssignedTo'];

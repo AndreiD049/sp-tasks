@@ -1,14 +1,16 @@
+import { uniqBy } from '@microsoft/sp-lodash-subset';
 import { DateTime } from 'luxon';
 import * as React from 'react';
 import { useState } from 'react';
 import ITask from '../models/ITask';
 import ITaskLog from '../models/ITaskLog';
 import GlobalContext from '../utils/GlobalContext';
+import { selectTasks } from '../utils/select-tasks';
 import { checkTasksAndCreateTaskLogs } from '../utils/utils';
 
 export interface ITasksResult {
-    tasks: [tasks: ITask[], setTasks: React.Dispatch<React.SetStateAction<ITask[]>>],
-    taskLogs: [tasks: ITaskLog[], setTasks: React.Dispatch<React.SetStateAction<ITaskLog[]>>],
+    tasks: [tasks: ITask[], setTasks: React.Dispatch<React.SetStateAction<ITask[]>>];
+    taskLogs: [tasks: ITaskLog[], setTasks: React.Dispatch<React.SetStateAction<ITaskLog[]>>];
 }
 
 export function useTasks(
@@ -30,13 +32,11 @@ export function useTasks(
      */
     React.useEffect(() => {
         async function run() {
-            const tasks = await TaskService.getTasksByMultipleUserIds(userIds);
+            // Select only valid tasks on that day
+            const tasks = selectTasks(await TaskService.getTasksByMultipleUserIds(userIds), date);
             let logs: ITaskLog[] = [];
             if (isSameDay) {
-                logs = await TaskLogsService.getTaskLogsByUserIds(
-                    date,
-                    userIds
-                );
+                logs = await TaskLogsService.getTaskLogsByUserIds(date, userIds);
                 const newTasks = await checkTasksAndCreateTaskLogs(
                     tasks,
                     logs,
@@ -44,13 +44,10 @@ export function useTasks(
                     TaskLogsService
                 );
                 logs = logs.concat(newTasks);
-                setTaskLogs(logs);
+                setTaskLogs(uniqBy(logs, (l) => l.ID));
             } else {
-                logs = await TaskLogsService.getTaskLogsByUserIds(
-                    date,
-                    userIds
-                );
-                setTaskLogs(logs);
+                logs = await TaskLogsService.getTaskLogsByUserIds(date, userIds);
+                setTaskLogs(uniqBy(logs, (l) => l.ID));
             }
             const logSet = new Set(logs.map((log) => log.Task.ID));
             setTasks(tasks.filter((task) => !logSet.has(task.ID)));
