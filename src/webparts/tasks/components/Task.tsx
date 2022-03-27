@@ -163,6 +163,7 @@ const Task: FC<ITaskProps> = (props) => {
                     <div className={styles.header}>
                         <Text variant="mediumPlus">{info.title}</Text>
                         <Persona
+                            data-testid='task-person'
                             className={styles.person}
                             text={info.user.Title}
                             size={PersonaSize.size24}

@@ -124,14 +124,14 @@ export function getDateStatistics(date: Date): IDateStatistics {
         weekday: dt.weekday,
         isWorkDay: dt.weekday < 6,
         daysInMonth: dt.daysInMonth,
-        workdaysInMonth: getNumberOfWorkdays(dt),
+        workdaysInMonth: getNumberOfWorkdaysInMonth(dt),
         nthDay: dt.day,
         nthWorkday: getNthWorkday(dt),
     };
     return result;
 }
 
-export function getNumberOfWorkdays(dt: DateTime): number {
+export function getNumberOfWorkdaysInMonth(dt: DateTime): number {
     // We get the weekday, 1 is Monday and 7 is Sunday.
     // It can be any day from 1 to 7
     // Thus, i can calculate number of workdays in the first week of the month
@@ -154,17 +154,23 @@ export function getNumberOfWorkdays(dt: DateTime): number {
     const lastWeekDays = daysWithoutFirstWeek % 7;
     // Now we can calculate the result
     // Ex: max(daysInFirstWeek - 2, 0) + fullWeeks * 5 + min(lastWeekDays, 5);
-    return Math.max(daysInFirstWeek - 2, 0) + fullWeeks * 5 - Math.min(lastWeekDays, 5);
+    return Math.max(daysInFirstWeek - 2, 0) + fullWeeks * 5 + Math.min(lastWeekDays, 5);
 }
 
 export function getNthWorkday(dt: DateTime): number {
-    // We can calculate the number of workdays by knowing the weekday and the day in month
-    const fullWeeks = Math.floor((dt.day - 1) / 7);
-    // We also need to know the number of days in the first week
-    // which is potentially 0 if month starts with monday.
-    const firstWeekDays = (dt.day - 1) % 7;
-    
-    return fullWeeks * 5 + Math.min(dt.weekday, 5) + Math.max(firstWeekDays - 2, 0);
+    // if day is in weekend, return 0
+    if (dt.weekday > 5) return 0;
+    const firstDay = dt.startOf('month');
+    const daysInFirstWeek = 7 - firstDay.weekday + 1;
+
+    // Only if day is in the first week
+    if (dt.day < daysInFirstWeek) {
+        return dt.weekday - firstDay.weekday + 1;
+    }
+
+    const fullWeeks = Math.floor((dt.day - daysInFirstWeek) / 7);
+
+    return Math.max(daysInFirstWeek - 2, 0) + fullWeeks * 5 + Math.min(dt.weekday, 5);
 }
 
 export function getWeekDaySet(daysList: WeekDay[]): Set<number> {

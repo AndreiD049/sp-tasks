@@ -71,9 +71,9 @@ const Tasks: React.FC = () => {
             if (created) {
                 copy = [...prev].concat(t);
             } else {
-                copy = prev.map((p) => (p.ID === t.ID ? t : p))
+                copy = prev.map((p) => (p.ID === t.ID ? t : p));
             }
-            
+
             return copy;
         });
     };
@@ -98,9 +98,14 @@ const Tasks: React.FC = () => {
                 destination.index
             );
             try {
-                let originalLog = moveResults.to.result.find((log) => getTaskUniqueId(log) === draggableId);
+                let originalLog = moveResults.to.result.find(
+                    (log) => getTaskUniqueId(log) === draggableId
+                );
                 if (isTask(originalLog)) {
                     originalLog = await TaskLogsService.createTaskLogFromTask(originalLog, date);
+                    moveResults.to.result = moveResults.to.result.map((t) =>
+                        getTaskUniqueId(t) === draggableId ? originalLog : t
+                    );
                 }
                 const updated = await TaskLogsService.updateTaskLog(originalLog.ID, {
                     UserId: +destination.droppableId,
