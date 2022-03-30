@@ -131,7 +131,7 @@ export default class TasksWebPart extends BaseClientSideWebPart<ITasksWebPartPro
                                 }),
                                 PropertyPaneSlider('maxPeople', {
                                     label: 'Maximum # of users',
-                                    min: 1,
+                                    min: 0,
                                     max: 15,
                                     value: this.properties.maxPeople || 0,
                                 }),

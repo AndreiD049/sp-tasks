@@ -37,4 +37,5 @@ export default interface ITask {
     Time: string;
     Type: TaskType;
     WeeklyDays: WeekDay[];
+    MonthlyDay?: number;
 }

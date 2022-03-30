@@ -10,6 +10,11 @@
     border-left-width: 5px;
     border-left-style: solid;
 
+    .expired {
+        font-weight: bold;
+        color: $ms-color-red;
+    }
+
     .header {
         display: flex;
         flex-flow: row nowrap;

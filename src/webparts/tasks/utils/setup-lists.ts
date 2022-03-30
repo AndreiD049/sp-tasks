@@ -54,6 +54,11 @@ export const setupLists = async (properties: ITasksWebPartProps) => {
             Description: 'Choose the week days when the task should be performed. Only valid when Type is Weekly.',
         });
 
+        await taskExists.list.fields.addNumber('MonthlyDay', {
+            Description: 'Valid only when Type is \'Monthly\'. Working day on which the task should be done.',
+            Required: false,
+        });
+
         await taskExists.list.fields.addDateTime('Time', {
             DisplayFormat: DateTimeFieldFormatType.DateTime,
             Description: 'Time when task needs to be performed',

@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { FC } from 'react';
 import { IUser } from '../models/IUser';
+import GlobalContext from '../utils/GlobalContext';
 import DateSelector from './DateSelector';
 import styles from './Tasks.module.scss';
 import UserSelctor from './UserSelector';
@@ -15,6 +16,8 @@ export interface IHeaderProps {
 }
 
 const Header: FC<IHeaderProps> = (props) => {
+    const { maxPeople } = React.useContext(GlobalContext);
+
     return (
         <div className={styles.commandbar}>
             <DateSelector
@@ -26,11 +29,13 @@ const Header: FC<IHeaderProps> = (props) => {
                 loading={props.loading}
                 className={styles.selector}
             />
-            <UserSelctor
-                users={props.selectedUsers}
-                setUsers={props.setSelectedUsers}
-                className={styles.userSelector}
-            />
+            {maxPeople > 0 ? (
+                <UserSelctor
+                    users={props.selectedUsers}
+                    setUsers={props.setSelectedUsers}
+                    className={styles.userSelector}
+                />
+            ) : null}
         </div>
     );
 };

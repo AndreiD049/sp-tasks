@@ -36,7 +36,7 @@ const DateSelector: React.FC<IDateSelectorProps> = (props) => {
             />
             <Text
                 style={{
-                    minWidth: '300px',
+                    minWidth: '250px',
                     display: 'inline-block',
                     textAlign: 'center',
                 }}

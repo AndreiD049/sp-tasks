@@ -1,3 +1,5 @@
+import { TaskStatus } from "./ITaskLog";
+
 export interface ITaskInfo {
     description: string;
     title: string;
@@ -8,5 +10,5 @@ export interface ITaskInfo {
     }
     date: string;
     time: string;
-    status: string;
+    status: TaskStatus;
 }

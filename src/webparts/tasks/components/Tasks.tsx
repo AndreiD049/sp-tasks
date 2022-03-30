@@ -20,14 +20,14 @@ const useCustomSorting = createState('customTaskSorting');
 const useSelectedDate = createState('selectedDate', sessionStorage);
 
 const Tasks: React.FC = () => {
-    const { currentUser, TaskLogsService } = useContext(GlobalContext);
+    const { currentUser, TaskLogsService, maxPeople } = useContext(GlobalContext);
 
     const [dateStr, setDate]: [Date, any] = useSelectedDate(new Date());
     const date = React.useMemo(() => new Date(dateStr), [dateStr]);
 
     const [selectedUsers, setSelectedUsers]: [IUser[], any] = useSelectedUsers([]);
     const userIds = React.useMemo(
-        () => [currentUser.User.ID, ...selectedUsers.map((u) => u.User.ID)],
+        () => [currentUser.User.ID, ...selectedUsers.map((u) => u.User.ID)].slice(0, maxPeople + 1),
         [selectedUsers]
     );
 

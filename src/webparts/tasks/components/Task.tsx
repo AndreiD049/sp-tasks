@@ -11,9 +11,10 @@ import {
 import * as React from 'react';
 import { FC } from 'react';
 import { Draggable } from 'react-beautiful-dnd';
-import ITask from '../models/ITask';
+import ITask, { TaskType } from '../models/ITask';
 import ITaskLog, { TaskStatus } from '../models/ITaskLog';
 import { ITaskInfo } from '../models/ITaskProperties';
+import { MINUTE } from '../utils/constants';
 import GlobalContext from '../utils/GlobalContext';
 import { getTaskUniqueId, isTask } from '../utils/utils';
 import styles from './Task.module.scss';
@@ -75,6 +76,7 @@ const Task: FC<ITaskProps> = (props) => {
     const { TaskLogsService, canEditOthers, currentUser } =
         React.useContext(GlobalContext);
     const [open, setOpen] = React.useState<boolean>(false);
+    const [expired, setExpired] = React.useState<boolean>(false);
 
     let info: ITaskInfo = React.useMemo(() => {
         if ('Description' in props.task) {
@@ -104,6 +106,22 @@ const Task: FC<ITaskProps> = (props) => {
             status: props.task.Status,
         };
     }, [props.task]);
+
+
+    React.useEffect(() => {
+        function checkExpired() {
+            const time = DateTime.fromISO(info.time);
+            if (info.status !== 'Open') {
+                return setExpired(false);
+            }
+            if (time <= DateTime.now()) {
+                setExpired(true);
+            }
+        }
+        checkExpired();
+        const timer = setInterval(checkExpired, MINUTE);
+        return () => clearInterval(timer);
+    }, [info]);
 
     const body = React.useMemo(() => {
         if (!open) return null;
@@ -161,7 +179,7 @@ const Task: FC<ITaskProps> = (props) => {
                     className={`${styles.task} ${info.status.toLowerCase()}`}
                 >
                     <div className={styles.header}>
-                        <Text variant="mediumPlus">{info.title}</Text>
+                        <Text className={expired && styles.expired} variant="mediumPlus">{info.title}</Text>
                         <Persona
                             data-testid='task-person'
                             className={styles.person}

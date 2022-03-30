@@ -19,6 +19,7 @@ const TASK_SELECT = [
     'Time',
     'Type',
     'WeeklyDays',
+    'MonthlyDay',
 ];
 
 const TASK_EXPAND = ['AssignedTo'];
