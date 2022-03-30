@@ -3,7 +3,7 @@
   "solution": {
     "name": "tasks-client-side-solution",
     "id": "5d3c9d67-8e60-4b78-a6d3-b542890a372e",
-    "version": "1.0.0.12",
+    "version": "1.0.0.13",
     "includeClientSideAssets": true,
     "isDomainIsolated": false,
     "developer": {

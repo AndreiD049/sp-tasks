@@ -73,8 +73,7 @@ export interface ITaskProps {
 }
 
 const Task: FC<ITaskProps> = (props) => {
-    const { TaskLogsService, canEditOthers, currentUser } =
-        React.useContext(GlobalContext);
+    const { TaskLogsService, canEditOthers, currentUser } = React.useContext(GlobalContext);
     const [open, setOpen] = React.useState<boolean>(false);
     const [expired, setExpired] = React.useState<boolean>(false);
 
@@ -84,12 +83,8 @@ const Task: FC<ITaskProps> = (props) => {
                 description: props.task.Description,
                 title: props.task.Title,
                 user: props.task.AssignedTo,
-                date: DateTime.fromJSDate(props.date).toLocaleString(
-                    DateTime.DATE_SHORT
-                ),
-                time: DateTime.fromISO(props.task.Time).toLocaleString(
-                    DateTime.TIME_24_SIMPLE
-                ),
+                date: DateTime.fromJSDate(props.date).toLocaleString(DateTime.DATE_SHORT),
+                time: DateTime.fromISO(props.task.Time).toLocaleString(DateTime.TIME_24_SIMPLE),
                 status: 'Open',
             };
         }
@@ -97,20 +92,22 @@ const Task: FC<ITaskProps> = (props) => {
             description: props.task.Task.Description,
             title: props.task.Title,
             user: props.task.User,
-            date: DateTime.fromISO(props.task.Date).toLocaleString(
-                DateTime.DATE_SHORT
-            ),
-            time: DateTime.fromISO(props.task.Task.Time).toLocaleString(
-                DateTime.TIME_24_SIMPLE
-            ),
+            date: DateTime.fromISO(props.task.Date).toLocaleString(DateTime.DATE_SHORT),
+            time: DateTime.fromISO(props.task.Task.Time).toLocaleString(DateTime.TIME_24_SIMPLE),
             status: props.task.Status,
         };
     }, [props.task]);
 
-
     React.useEffect(() => {
         function checkExpired() {
-            const time = DateTime.fromISO(info.time);
+            const dt = isTask(props.task)
+                ? DateTime.fromJSDate(props.date)
+                : DateTime.fromISO(props.task.Date);
+            const time = DateTime.fromISO(info.time).set({
+                day: dt.day,
+                month: dt.month,
+                year: dt.year,
+            });
             if (info.status !== 'Open') {
                 return setExpired(false);
             }
@@ -139,8 +136,8 @@ const Task: FC<ITaskProps> = (props) => {
 
     const handleChange = async (_: any, option: IDropdownOption) => {
         const log: ITaskLog = !isTask(props.task)
-                ? props.task
-                : await TaskLogsService.createTaskLogFromTask(props.task, props.date);
+            ? props.task
+            : await TaskLogsService.createTaskLogFromTask(props.task, props.date);
 
         const update: Partial<ITaskLog> = {
             Status: option.key as TaskStatus,
@@ -172,16 +169,18 @@ const Task: FC<ITaskProps> = (props) => {
             index={props.index}
         >
             {(provided) => (
-                <div 
+                <div
                     ref={provided.innerRef}
                     {...provided.draggableProps}
                     {...provided.dragHandleProps}
                     className={`${styles.task} ${info.status.toLowerCase()}`}
                 >
                     <div className={styles.header}>
-                        <Text className={expired && styles.expired} variant="mediumPlus">{info.title}</Text>
+                        <Text className={expired && styles.expired} variant="mediumPlus">
+                            {info.title}
+                        </Text>
                         <Persona
-                            data-testid='task-person'
+                            data-testid="task-person"
                             className={styles.person}
                             text={info.user.Title}
                             size={PersonaSize.size24}
@@ -203,16 +202,11 @@ const Task: FC<ITaskProps> = (props) => {
                             styles={DROPDOWN_STYLES}
                             selectedKey={info.status}
                             onChange={
-                                info.user.ID === currentUser.User.ID ||
-                                canEditOthers
+                                info.user.ID === currentUser.User.ID || canEditOthers
                                     ? handleChange
                                     : null
                             }
-                            disabled={
-                                info.user.ID === currentUser.User.ID
-                                    ? false
-                                    : !canEditOthers
-                            }
+                            disabled={info.user.ID === currentUser.User.ID ? false : !canEditOthers}
                         />
                     </div>
                     {info.description ? (
