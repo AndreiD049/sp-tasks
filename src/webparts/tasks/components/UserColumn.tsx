@@ -1,4 +1,3 @@
-import { PropertyPaneSlider } from '@microsoft/sp-property-pane';
 import { Persona } from 'office-ui-fabric-react';
 import * as React from 'react';
 import { FC } from 'react';
@@ -7,6 +6,7 @@ import { ITasksPerUser } from '../hooks/useTasksPerUser';
 import ITaskLog from '../models/ITaskLog';
 import GlobalContext from '../utils/GlobalContext';
 import { getTaskUniqueId } from '../utils/utils';
+import NoTasks from './NoTasks';
 import Task from './Task';
 import styles from './Tasks.module.scss';
 
@@ -17,42 +17,38 @@ export interface IUserColumnsProps {
     date: Date;
 }
 
-const UserColumn: FC<IUserColumnsProps> = ({
-    tasksPerUser,
-    id,
-    handleTaskUpdated,
-    date,
-}) => {
+const UserColumn: FC<IUserColumnsProps> = ({ tasksPerUser, id, handleTaskUpdated, date }) => {
     const { canEditOthers } = React.useContext(GlobalContext);
+
+    let body;
+
+    if (tasksPerUser[id]?.result && tasksPerUser[id]?.result.length > 0) {
+        body = tasksPerUser[id]?.result.map((task, index) => (
+            <Task
+                task={task}
+                index={index}
+                date={date}
+                handleTaskUpdated={handleTaskUpdated}
+                key={getTaskUniqueId(task)}
+            />
+        ));
+    } else {
+        body = <NoTasks />
+    }
+
     return (
-        <Droppable
-            droppableId={id.toString()}
-            type={canEditOthers ? 'any' : id.toString()}
-        > 
+        <Droppable droppableId={id.toString()} type={canEditOthers ? 'any' : id.toString()}>
             {(provided) => (
-                <div 
+                <div
                     className={styles.taskContainer}
                     {...provided.droppableProps}
                     ref={provided.innerRef}
                 >
                     <Persona
-                        text={
-                            tasksPerUser[id]?.user.User
-                                .Title
-                        }
+                        text={tasksPerUser[id]?.user.User.Title}
                         imageUrl={`/_layouts/15/userphoto.aspx?AccountName=${tasksPerUser[id]?.user.User.EMail}&Size=M`}
                     />
-                    {tasksPerUser[id]?.result.map(
-                        (task, index) => (
-                            <Task
-                                task={task}
-                                index={index}
-                                date={date}
-                                handleTaskUpdated={ handleTaskUpdated }
-                                key={getTaskUniqueId(task)}
-                            />
-                        )
-                    )}
+                    {body}
                     {provided.placeholder}
                 </div>
             )}

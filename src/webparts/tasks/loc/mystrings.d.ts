@@ -8,6 +8,7 @@ declare interface ITasksWebPartStrings {
     UserColumnNameLabel: string;
     TeamColumnNameLabel: string;
     RoleColumnNameLabel: string;
+    NoTasksLabel: string;
 }
 
 declare module 'TasksWebPartStrings' {

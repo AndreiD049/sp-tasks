@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { useContext } from 'react';
 import { DragDropContext, DropResult } from 'react-beautiful-dnd';
-import createState from 'use-persisted-state';
 import useSyncTasks from '../hooks/useSyncTasks';
 import { useTasks } from '../hooks/useTasks';
 import { useTasksPerUser } from '../hooks/useTasksPerUser';
@@ -14,18 +13,22 @@ import styles from './Tasks.module.scss';
 import UserColumn from './UserColumn';
 import { SPnotify } from 'sp-react-notifications';
 import { MessageBarType, Spinner, SpinnerSize } from 'office-ui-fabric-react';
-
-const useSelectedUsers = createState('selectedUsers');
-const useCustomSorting = createState('customTaskSorting');
-const useSelectedDate = createState('selectedDate', sessionStorage);
+import useWebStorage from 'use-web-storage-api';
+import { HOUR } from '../utils/constants';
 
 const Tasks: React.FC = () => {
     const { currentUser, TaskLogsService, maxPeople } = useContext(GlobalContext);
 
-    const [dateStr, setDate]: [Date, any] = useSelectedDate(new Date());
-    const date = React.useMemo(() => new Date(dateStr), [dateStr]);
+    const [date, setDate] = useWebStorage<Date>(new Date(), {
+        key: 'selectedDate',
+        serialize: (val) => val.toISOString(),
+        deserialize: (val) => new Date(val),
+        expiresIn: HOUR * 8,
+    });
 
-    const [selectedUsers, setSelectedUsers]: [IUser[], any] = useSelectedUsers([]);
+    const [selectedUsers, setSelectedUsers] = useWebStorage<IUser[]>([], {
+        key: 'selectedUsers',
+    });
     const userIds = React.useMemo(
         () => [currentUser.User.ID, ...selectedUsers.map((u) => u.User.ID)].slice(0, maxPeople + 1),
         [selectedUsers]
@@ -37,7 +40,9 @@ const Tasks: React.FC = () => {
      * Custom sorting of tasks.
      * Applied when user changes task order manually (drag & drop)
      */
-    const [customSorting, setCustomSorting]: [ICustomSorting, any] = useCustomSorting({});
+    const [customSorting, setCustomSorting]: [ICustomSorting, any] = useWebStorage<ICustomSorting>({}, {
+        key: 'customTaskSorting'
+    });
 
     /**
      * Check with the list every few minutes

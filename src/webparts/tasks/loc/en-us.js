@@ -9,5 +9,6 @@ define([], function () {
         UserColumnNameLabel: 'User column',
         TeamColumnNameLabel: 'Team column',
         RoleColumnNameLabel: 'Role column',
+        NoTasksLabel: 'No (more) tasks for this user on this date...',
     };
 });

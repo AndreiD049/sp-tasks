@@ -28,7 +28,7 @@
     "react-dom": "16.13.1",
     "react-visibility-hook": "^1.0.0",
     "sp-preset": "^1.0.10",
-    "use-persisted-state": "^0.3.3"
+    "use-web-storage-api": "^1.0.3"
   },
   "devDependencies": {
     "@microsoft/sp-build-web": "1.13.1",

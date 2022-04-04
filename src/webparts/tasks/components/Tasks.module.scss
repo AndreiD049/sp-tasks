@@ -54,4 +54,13 @@
             margin-top: 0.7em;
         }
     }
+
+    .noTasks {
+        height: 6em;
+        display: flex;
+        flex-flow: column nowrap;
+        align-items: center;
+        justify-content: center;
+        color: '[theme: neutralSecondaryAlt, default: #fbf4f4]';
+    }
 }
