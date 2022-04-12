@@ -144,18 +144,20 @@ const Task: FC<ITaskProps> = (props) => {
         };
         switch (update.Status) {
             case 'Open':
-                update.PickupDate = null;
+                // If task is not transferable, task stays Completed
+                update.Completed = log.Transferable ? false : true;
                 break;
             case 'Pending':
-                update.PickupDate = DateTime.now().toISODate();
+                // If task is not transferable, task stays Completed
                 update.DateTimeStarted = log.DateTimeStarted ?? new Date();
+                update.Completed = log.Transferable ? false : true;
                 break;
             case 'Finished':
                 update.DateTimeFinished = log.DateTimeFinished ?? new Date();
-                update.PickupDate = DateTime.now().toISODate();
+                update.Completed = true;
                 break;
             case 'Cancelled':
-                update.PickupDate = null;
+                update.Completed = true;
                 break;
         }
         const updated = await TaskLogsService.updateTaskLog(log.ID, update);

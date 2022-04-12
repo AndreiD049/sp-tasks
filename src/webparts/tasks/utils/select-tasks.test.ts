@@ -16,6 +16,7 @@ const tasks: ITask[] = [
         Type: TaskType.Monthly,
         WeeklyDays: [],
         MonthlyDay: 1,
+        Transferable: false,
     },
     {
         ID: 3,
@@ -30,6 +31,7 @@ const tasks: ITask[] = [
         Type: TaskType.Monthly,
         WeeklyDays: [],
         MonthlyDay: 5,
+        Transferable: false,
     },
     {
         ID: 2,
@@ -44,6 +46,7 @@ const tasks: ITask[] = [
         Type: TaskType.Monthly,
         WeeklyDays: [],
         MonthlyDay: 31,
+        Transferable: false,
     }
 ]
 

@@ -15,6 +15,7 @@ const task: ITask = {
     },
     Type: TaskType.Daily,
     WeeklyDays: null,
+    Transferable: false,
 }
 
 test('Task renders correctly', () => {

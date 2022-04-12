@@ -2,6 +2,7 @@ import {
     ChoiceFieldFormatType,
     DateTimeFieldFormatType,
     DateTimeFieldFriendlyFormatType,
+    FieldTypes,
 } from '@pnp/sp/fields';
 import { MessageBarType } from 'office-ui-fabric-react';
 import { getSP } from 'sp-preset';
@@ -27,14 +28,12 @@ export const setupLists = async (properties: ITasksWebPartProps) => {
         // Create fields for the list
         await taskExists.list.fields.addText('Description', {
             Required: false,
-            Hidden: false,
             Description: 'Description of the task',
         });
 
         await taskExists.list.fields.addUser('AssignedTo', {
             Title: 'Assigned To',
             Required: true,
-            Hidden: false,
             Indexed: true,
             Description: 'Users or groups to which the task is assigned',
         });
@@ -63,6 +62,11 @@ export const setupLists = async (properties: ITasksWebPartProps) => {
             DisplayFormat: DateTimeFieldFormatType.DateTime,
             Description: 'Time when task needs to be performed',
             Required: true,
+        });
+
+        await taskExists.list.fields.addBoolean('Transferable', {
+            Description: 'Whether task should be transferred to next day if it was not completed',
+            Indexed: true,
         });
     }
 
@@ -98,6 +102,7 @@ export const setupLists = async (properties: ITasksWebPartProps) => {
             Required: false,
             Title: 'Date Time Started',
             Description: 'Date and time when task was started',
+            Indexed: true,
         });
 
         await taskLogsExists.list.fields.addDateTime('DateTimeFinished', {
@@ -131,19 +136,21 @@ export const setupLists = async (properties: ITasksWebPartProps) => {
             Indexed: true,
         });
 
-        // Helper columns to track reassignement and early pickup of tasks
-        await taskLogsExists.list.fields.addDateTime('PickupDate', {
-            DisplayFormat: DateTimeFieldFormatType.DateOnly,
-            Required: false,
-            Description: 'Date when task was picked up',
-            Indexed: true,
-        });
-
         // Who was the original user of the task.
         // Will be filled in if the task was reassigned to another user
         await taskLogsExists.list.fields.addUser('OriginalUser', {
             Description: 'Original User related to the task',
             Required: false,
+            Indexed: true,
+        });
+
+        await taskLogsExists.list.fields.addBoolean('Completed', {
+            Description: 'Whether task was completed',
+            Indexed: true,
+        });
+
+        await taskLogsExists.list.fields.addBoolean('Transferable', {
+            Description: 'Whether task should be transferred to next day if it was not completed',
             Indexed: true,
         });
     }

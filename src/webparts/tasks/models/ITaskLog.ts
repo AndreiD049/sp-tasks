@@ -8,6 +8,7 @@ export default interface ITaskLog {
         Title: string;
         Description: string;
         Time: string;
+        Transferable: "0" | "1";
     };
     TaskId?: number;
     Date: string;
@@ -22,9 +23,10 @@ export default interface ITaskLog {
     UserId?: number;
     Remark: string;
     UniqueValidation?: string;
-    PickupDate?: string;
     OriginalUserId?: number;
     OriginalUser: {
         ID: number;
     };
+    Completed: boolean;
+    Transferable: boolean;
 }

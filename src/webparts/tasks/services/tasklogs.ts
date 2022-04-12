@@ -25,6 +25,8 @@ const LOG_SELECT = [
     'User/EMail',
     'Remark',
     'OriginalUser/ID',
+    'Completed',
+    'Transferable',
 ];
 
 const LOG_EXPAND = ['Task', 'User', 'OriginalUser'];
@@ -76,14 +78,14 @@ export default class TaskLogsService {
         return this._wrap(this.list.items.filter(filter))();
     }
 
-    async getTaskLogsByUserIds(date: Date, ids: number[]): Promise<ITaskLog[]> {
+    async getTaskLogsByUserIds(date: Date, userIds: number[]): Promise<ITaskLog[]> {
         let res: ITaskLog[] = [];
         const [batchedSP, execute] = this.sp.batched();
-        const dt = DateTime.fromJSDate(date).toISODate();
+        const dt = DateTime.fromJSDate(date);
         const list = batchedSP.web.lists.getByTitle(this.listName);
-        ids.forEach((id) => {
+        userIds.forEach((userId) => {
             this._wrap(
-                list.items.filter(`((Date eq '${dt}') or (PickupDate eq '${dt}')) and ((UserId eq ${id}) or (OriginalUserId eq ${id}))`)
+                list.items.filter(this.getTaskLogFilter(userId, dt))
             )().then((r) => (res = res.concat(r)));
         });
 
@@ -179,7 +181,11 @@ export default class TaskLogsService {
             Status: 'Open',
             TaskId: task.ID,
             UserId: task.AssignedTo.ID,
-            UniqueValidation: `${task.ID}-${task.AssignedTo.ID}-${dt}`
+            UniqueValidation: `${task.ID}-${task.AssignedTo.ID}-${dt}`,
+            // If task is not transferable, log is set to default completed
+            // meaning it will not appear tomorrow if it's not on the list
+            Completed: !Boolean(task.Transferable),
+            Transferable: task.Transferable,
         };
     }
 
@@ -188,5 +194,20 @@ export default class TaskLogsService {
             .orderBy('Task/Time', true)
             .select(...LOG_SELECT)
             .expand(...LOG_EXPAND);
+    }
+
+    /**
+     * 
+     * @param userId 
+     * @param dt currently selected date
+     * @returns the filter to be applied on the list of task logs
+     */
+    private getTaskLogFilter(userId: number, dt: DateTime) {
+        const isToday = dt.hasSame(DateTime.now(), 'day');
+        if (isToday) {
+            return `(Date eq '${dt.toISODate()}') and ((UserId eq ${userId}) or (OriginalUserId eq ${userId})) or (Completed eq false)`;
+        } else {
+            return `(Date eq '${dt.toISODate()}') and ((UserId eq ${userId}) or (OriginalUserId eq ${userId}))`;
+        }
     }
 }
